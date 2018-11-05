@@ -1,0 +1,40 @@
+
+
+spring:
+    datasource:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driverClassName: com.mysql.jdbc.Driver
+        driver-class-name: com.mysql.jdbc.Driver
+        platform: mysql
+        url: jdbc:mysql://118.190.152.143:3306/lxtestdb?useUnicode=true&characterEncoding=utf-8&useSSL=false
+        username: lixin
+        password: lx123
+        initialSize: 5
+        minIdle: 5
+        maxActive: 20
+        maxWait: 60000
+        timeBetweenEvictionRunsMillis: 60000
+        minEvictableIdleTimeMillis: 300000
+        validationQuery: SELECT1FROMDUAL
+        testWhileIdle: true
+        testOnBorrow: false
+        testOnReturn: false
+        filters: stat,wall,slf4j
+        logSlowSql: true
+    mybatis:
+        mapper-locations: classpath*:/mapper/*Mapper.xml
+        type-aliases-package: com.lxpro.entity
+        #pagehelper分页插件
+    pagehelper:
+        helperDialect: mysql
+        reasonable: true
+        supportMethodsArguments: true
+        params: count=countSql
+    mvc:
+        view:
+          prefix: /pages/
+          suffix: .html
+server:
+  port: 80
+
+

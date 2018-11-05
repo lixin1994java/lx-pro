@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>番茄炒蛋首页</title>
+    <link rel="stylesheet" href=../js/layui/css/layui.css media="all">
+</head>
+<body>
+
+<div class="layui-carousel" id="indexImg" style="height: 50%;width:100% ">
+    <ul class="layui-nav" lay-filter="">
+        <li class="layui-nav-item"><a href="">首页</a></li>
+        <li class="layui-nav-item"><a href="">最新活动</a></li>
+        <li class="layui-nav-item layui-this"><a href="">产品</a></li>
+        <li class="layui-nav-item"><a href="">社区</a></li>
+        <li class="layui-nav-item">
+            <a href="javascript:;">讨论区</a>
+            <dl class="layui-nav-child"> <!-- 二级菜单 -->
+                <dd><a href="">篮球</a></dd>
+                <dd><a href="">足球</a></dd>
+                <dd><a href="">游戏</a></dd>
+            </dl>
+        </li>
+        <li class="layui-nav-item" style="width: 800px"></li>
+        <li class="layui-nav-item">
+            <a href="">控制台<span class="layui-badge">9</span></a>
+        </li>
+        <li class="layui-nav-item">
+            <a href="">个人中心<span class="layui-badge-dot"></span></a>
+        </li>
+        <li class="layui-nav-item" lay-unselect="">
+            <a href="javascript:;"><img src="//t.cn/RCzsdCq" class="layui-nav-img">我</a>
+            <dl class="layui-nav-child">
+                <dd><a href="javascript:;">修改信息</a></dd>
+                <dd><a href="javascript:;">安全管理</a></dd>
+                <dd><a href="javascript:;">退了</a></dd>
+            </dl>
+        </li>
+    </ul>
+    <div carousel-item>
+        <div class="layui-bg-green"><img src="img/8104.jpg_wh1200.jpg"/></div>
+        <div class="layui-bg-green"></div>
+        <div class="layui-bg-green"></div>
+    </div>
+</div>
+</body>
+<script src="../js/layui/layui.js"></script>
+<script>
+    layui.use('carousel', function () {
+        var carousel = layui.carousel;
+        //建造实例
+        carousel.render({
+            elem: '#indexImg'
+            , width: '100%' //设置容器宽度
+            , height: '480'
+            , arrow: 'always' //始终显示箭头
+            //,anim: 'updown' //切换动画方式
+        });
+    });
+    //注意：导航 依赖 element 模块，否则无法进行功能性操作
+    layui.use('element', function () {
+        var element = layui.element;
+        element.render({
+
+            }
+        )
+    });
+</script>
+</html>
