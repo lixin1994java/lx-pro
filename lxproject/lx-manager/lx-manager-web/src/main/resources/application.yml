@@ -1,7 +1,6 @@
 
-
 spring:
-    datasource:
+      datasource:
         type: com.alibaba.druid.pool.DruidDataSource
         driverClassName: com.mysql.jdbc.Driver
         driver-class-name: com.mysql.jdbc.Driver
@@ -21,20 +20,22 @@ spring:
         testOnReturn: false
         filters: stat,wall,slf4j
         logSlowSql: true
-    mybatis:
-        mapper-locations: classpath*:/mapper/*Mapper.xml
-        type-aliases-package: com.lxpro.entity
-        #pagehelper分页插件
-    pagehelper:
-        helperDialect: mysql
-        reasonable: true
-        supportMethodsArguments: true
-        params: count=countSql
     mvc:
         view:
           prefix: /pages/
           suffix: .html
 server:
   port: 80
-
+mybatis:
+    mapper-locations: classpath**:/mybatis_xml/*.xml
+    type-aliases-package: com.lxpro.entity
+    #pagehelper分页插件
+    pagehelper:
+        helperDialect: mysql
+        reasonable: true
+        supportMethodsArguments: true
+        params: count=countSql
+logging:
+  level:
+       com.lxpro.mapper : DEBUG
 
