@@ -1,7 +1,8 @@
 package com.lxpro.web.controller;
 
-import com.lxpro.entity.User;
+
 import com.lxpro.entity.RestResponseVo;
+import com.lxpro.entity.user.User;
 import com.lxpro.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;

@@ -1,7 +1,8 @@
 package com.lxpro.service;
 
-import com.lxpro.entity.User;
-import com.lxpro.mapper.UserMapper;
+
+import com.lxpro.entity.user.User;
+import com.lxpro.mapper.user.UserMapper;
 import com.lxpro.service.serviceInterface.MyUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
