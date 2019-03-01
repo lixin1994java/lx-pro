@@ -16,6 +16,9 @@ import com.alibaba.druid.pool.DruidDataSource;
 import com.alibaba.druid.support.http.StatViewServlet;
 import com.alibaba.druid.support.http.WebStatFilter;
 
+/**
+ * 数据库配置类
+ */
 @Configuration
 public class DruidConfiguration {
 
@@ -56,7 +59,7 @@ public class DruidConfiguration {
         private String driverClassName;
         private int initialSize;
         private int minIdle;
-        private int maxActive =20;
+        private int maxActive;
         private int maxWait;
         private int timeBetweenEvictionRunsMillis;
         private int minEvictableIdleTimeMillis;
@@ -70,7 +73,7 @@ public class DruidConfiguration {
         private String connectionProperties;
 
         @Bean     //声明其为Bean实例
-        @Primary  //在同样的DataSource中，首先使用被标注的DataSource
+        @Primary
         public DataSource dataSource() {
             DruidDataSource datasource = new DruidDataSource();
             datasource.setUrl(url);
@@ -81,7 +84,7 @@ public class DruidConfiguration {
             //configuration
             datasource.setInitialSize(initialSize);
             datasource.setMinIdle(minIdle);
-            datasource.setMaxActive(maxActive);
+            datasource.setMaxActive(20);
             datasource.setMaxWait(maxWait);
             datasource.setTimeBetweenEvictionRunsMillis(timeBetweenEvictionRunsMillis);
             datasource.setMinEvictableIdleTimeMillis(minEvictableIdleTimeMillis);

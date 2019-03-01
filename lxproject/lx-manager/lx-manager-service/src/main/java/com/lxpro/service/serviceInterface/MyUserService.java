@@ -1,6 +1,6 @@
 package com.lxpro.service.serviceInterface;
 
-import com.lxpro.entity.User;
+import com.lxpro.entity.user.User;
 
 /**
  * 用户模块接口

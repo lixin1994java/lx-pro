@@ -8,12 +8,12 @@
 <body>
 
 <div class="layui-carousel" id="indexImg" style="height: 50%;width:100% ">
-    <ul class="layui-nav" lay-filter="">
-        <li class="layui-nav-item"><a href="">首页</a></li>
-        <li class="layui-nav-item"><a href="">最新活动</a></li>
-        <li class="layui-nav-item layui-this"><a href="">产品</a></li>
-        <li class="layui-nav-item"><a href="">社区</a></li>
-        <li class="layui-nav-item">
+    <ul class="layui-nav" lay-filter="" >
+        <li class="layui-nav-item" style="margin-left: auto;"><a href="">首页</a></li>
+        <li class="layui-nav-item" style="margin-left: auto;"><a href="">最新活动</a></li>
+        <li class="layui-nav-item layui-this" style="margin-left: auto;"><a href="">产品</a></li>
+        <li class="layui-nav-item" style="margin-left: auto;"><a href="">社区</a></li>
+        <li class="layui-nav-item" style="margin-left: auto;">
             <a href="javascript:;">讨论区</a>
             <dl class="layui-nav-child"> <!-- 二级菜单 -->
                 <dd><a href="">篮球</a></dd>
@@ -21,14 +21,14 @@
                 <dd><a href="">游戏</a></dd>
             </dl>
         </li>
-        <li class="layui-nav-item" style="width: 800px"></li>
-        <li class="layui-nav-item">
+        <li class="layui-nav-item" style="width: 45%"></li>
+        <li class="layui-nav-item" style="margin-right:auto;">
             <a href="">控制台<span class="layui-badge">9</span></a>
         </li>
-        <li class="layui-nav-item">
+        <li class="layui-nav-item" style="margin-right:auto;">
             <a href="">个人中心<span class="layui-badge-dot"></span></a>
         </li>
-        <li class="layui-nav-item" lay-unselect="">
+        <li class="layui-nav-item" lay-unselect="" style="margin-right:auto;">
             <a href="javascript:;"><img src="//t.cn/RCzsdCq" class="layui-nav-img">我</a>
             <dl class="layui-nav-child">
                 <dd><a href="javascript:;">修改信息</a></dd>
@@ -46,6 +46,12 @@
 </body>
 <script src="../js/layui/layui.js"></script>
 <script>
+    window.onload=function(){
+        var item = localStorage.getItem("token");
+        if(item==null||item==""){
+            window.location.href="/pages/login.html";
+        }
+    }
     layui.use('carousel', function () {
         var carousel = layui.carousel;
         //建造实例
@@ -53,7 +59,8 @@
             elem: '#indexImg'
             , width: '100%' //设置容器宽度
             , height: '480'
-            , arrow: 'always' //始终显示箭头
+            ,autoplay:false
+            , arrow: 'hover' //始终显示箭头
             //,anim: 'updown' //切换动画方式
         });
     });
