@@ -54,6 +54,7 @@ public class LoginController {
             HashMap<String, Object> map = new HashMap<>();
             map.put("userId",integer);
             restResponseVo.setData(map);
+
         }else{
             restResponseVo.setSuccess(false);
             restResponseVo.setError_code(1001);
