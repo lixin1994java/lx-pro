@@ -62,6 +62,7 @@ public class LoginController {
             restResponseVo.setSuccess(false);
             restResponseVo.setError_code(1001);
             restResponseVo.setMeassage("注册失败");
+            !YG*YF*
         }
 
         return restResponseVo;
