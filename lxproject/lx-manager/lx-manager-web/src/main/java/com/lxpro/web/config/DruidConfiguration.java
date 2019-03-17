@@ -15,10 +15,8 @@ import org.springframework.context.annotation.Primary;
 import com.alibaba.druid.pool.DruidDataSource;
 import com.alibaba.druid.support.http.StatViewServlet;
 import com.alibaba.druid.support.http.WebStatFilter;
+import org.springframework.stereotype.Component;
 
-/**
- * 数据库配置类
- */
 @Configuration
 public class DruidConfiguration {
 
@@ -51,6 +49,7 @@ public class DruidConfiguration {
     }
 
     //解决 spring.datasource.filters=stat,wall,log4j 无法正常注册进去
+    @Component
     @ConfigurationProperties(prefix = DB_PREFIX)
     class IDataSourceProperties {
         private String url;
@@ -73,7 +72,7 @@ public class DruidConfiguration {
         private String connectionProperties;
 
         @Bean     //声明其为Bean实例
-        @Primary
+        @Primary  //在同样的DataSource中，首先使用被标注的DataSource
         public DataSource dataSource() {
             DruidDataSource datasource = new DruidDataSource();
             datasource.setUrl(url);
@@ -84,7 +83,7 @@ public class DruidConfiguration {
             //configuration
             datasource.setInitialSize(initialSize);
             datasource.setMinIdle(minIdle);
-            datasource.setMaxActive(20);
+            datasource.setMaxActive(maxActive);
             datasource.setMaxWait(maxWait);
             datasource.setTimeBetweenEvictionRunsMillis(timeBetweenEvictionRunsMillis);
             datasource.setMinEvictableIdleTimeMillis(minEvictableIdleTimeMillis);

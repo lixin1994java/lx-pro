@@ -1,10 +1,8 @@
 package com.lxpro.web.controller;
 
 import com.lxpro.commons.JwtUtils;
-import com.lxpro.commons.RestResponseVo;
-
-import com.lxpro.commons.RestResponseVo;
-import com.lxpro.entity.user.User;
+import com.lxpro.entity.User;
+import com.lxpro.entity.RestResponseVo;
 import com.lxpro.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.BindingResult;
@@ -26,7 +24,7 @@ public class LoginController {
 
     @Autowired
     UserService userService;
-
+    private ObjectError e;
     @RequestMapping("/login")
     @ResponseBody
     private RestResponseVo userLogin(User user){
@@ -63,7 +61,6 @@ public class LoginController {
         return restResponseVo;
 
     }
-
     @RequestMapping("/regist")
     @ResponseBody
     private RestResponseVo regist(@Validated({User.aa.class}) User user, BindingResult bs){
