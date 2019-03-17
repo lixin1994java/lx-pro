@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Primary;
 import com.alibaba.druid.pool.DruidDataSource;
 import com.alibaba.druid.support.http.StatViewServlet;
 import com.alibaba.druid.support.http.WebStatFilter;
+import org.springframework.stereotype.Component;
 
 @Configuration
 public class DruidConfiguration {
@@ -48,6 +49,7 @@ public class DruidConfiguration {
     }
 
     //解决 spring.datasource.filters=stat,wall,log4j 无法正常注册进去
+    @Component
     @ConfigurationProperties(prefix = DB_PREFIX)
     class IDataSourceProperties {
         private String url;
@@ -56,7 +58,7 @@ public class DruidConfiguration {
         private String driverClassName;
         private int initialSize;
         private int minIdle;
-        private int maxActive =20;
+        private int maxActive;
         private int maxWait;
         private int timeBetweenEvictionRunsMillis;
         private int minEvictableIdleTimeMillis;

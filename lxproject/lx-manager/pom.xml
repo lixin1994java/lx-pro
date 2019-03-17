@@ -63,6 +63,7 @@
 	<module>lx-manager-service</module>
 	<module>lx-manager-dao</module>
 	<module>lx-manager-entity</module>
+	<module>lx-manager-commons</module>
 </modules>
 
 </project>

@@ -3,6 +3,7 @@
 <head>
     <title>Login</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <link rel="stylesheet" href=../js/layui/css/layui.css media="all">
     <script type="application/x-javascript"> addEventListener("load", function () {
         setTimeout(hideURLbar, 0);
     }, false);
@@ -12,12 +13,6 @@
     } </script>
     <meta name="keywords" content="番茄炒蛋"/>
     <link href="../css/style.css" rel='stylesheet' type='text/css'/>
-    <!--webfonts-->
-    <link href='http://fonts.useso.com/css?family=PT+Sans:400,700,400italic,700italic|Oswald:400,300,700'
-          rel='stylesheet' type='text/css'>
-    <link href='http://fonts.useso.com/css?family=Exo+2' rel='stylesheet' type='text/css'>
-    <!--//webfonts-->
-    <script src="http://ajax.useso.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
     <script src="../js/layui/jquery.js"></script>
 </head>
 <body>
@@ -29,7 +24,7 @@
     });
 });
 </script>
-<h1>欢迎来到番茄炒蛋</h1>
+<h1 class="layui-anim layui-anim-up" class="#009688" >欢迎来到番茄炒蛋</h1>
 <div class="login-form">
     <div class="close"></div>
     <div class="head-info">
@@ -57,21 +52,33 @@
     <p>Copyright &copy; </p>
 </div>
 </body>
+<script src="../js/layui/layui.js"></script>
 <script>
     function login () {
-        var baseUrl ="118.190.152.143"
+        /*var baseUrl ="127.0.0.1"*/
         var userName = $("#userName").val();
         var userPwd = $("#userPwd").val()
         $.ajax({
-            url: baseUrl+"/user/login?userName="+userName+"&userPwd="+userPwd,
+            /*url: "/user/login?userName="+userName+"&userPwd="+userPwd,*/
+            url: "/user/login",
             type: 'get',
+            data:{"userName":userName,"userPwd":userPwd},
             dataType: 'json',
             timeout: 1000,
             success: function (data) {
                 if(data.success==true){
-                    window.location.href=baseUrl+"/pages/index.html";
+                    window.location.href="/pages/index.html";
+                    console.info(data);
+                    localStorage.setItem("token",data.token);
                 }else{
-                    alert("密码错误")
+                    layui.use('layer', function(){
+                        var layer = layui.layer;
+                        console.info(data);
+                        layer.open({
+                            title: '番茄提示'
+                            ,content:data.message
+                        });
+                    });
                 }
             },
             error: function (err, status) {
