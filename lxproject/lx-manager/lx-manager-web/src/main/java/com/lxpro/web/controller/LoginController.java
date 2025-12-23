@@ -4,6 +4,8 @@ package com.lxpro.web.controller;
 import com.lxpro.entity.RestResponseVo;
 import com.lxpro.entity.user.User;
 import com.lxpro.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -14,6 +16,8 @@ import java.util.HashMap;
 @RestController
 @RequestMapping("/user")
 public class LoginController {
+
+    private static final Logger logger = LoggerFactory.getLogger(LoginController.class);
 
     @Autowired
     UserService userService;
@@ -54,15 +58,11 @@ public class LoginController {
             HashMap<String, Object> map = new HashMap<>();
             map.put("userId",integer);
             restResponseVo.setData(map);
-            System.out.println(map);
-            System.out.println(map);
-            System.out.println("II");
-            System.out.println("2222");
+            logger.info("用户注册成功，用户ID: {}", integer);
         }else{
             restResponseVo.setSuccess(false);
             restResponseVo.setError_code(1001);
             restResponseVo.setMeassage("注册失败");
-            !YG*YF*
         }
 
         return restResponseVo;

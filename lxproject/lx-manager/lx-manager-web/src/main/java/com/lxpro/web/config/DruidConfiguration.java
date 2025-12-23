@@ -28,8 +28,8 @@ public class DruidConfiguration {
     public ServletRegistrationBean druidServlet() {
         logger.info("init Druid Servlet Configuration ");
         ServletRegistrationBean servletRegistrationBean = new ServletRegistrationBean(new StatViewServlet(), "/druid/*");
-        // IP白名单
-        servletRegistrationBean.addInitParameter("allow", "*");
+        // IP白名单 - 仅允许本地访问，生产环境应配置具体的IP地址
+        servletRegistrationBean.addInitParameter("allow", "127.0.0.1,localhost");
         // IP黑名单(共同存在时，deny优先于allow)
         servletRegistrationBean.addInitParameter("deny", "192.168.1.100");
         //控制台管理用户
@@ -96,7 +96,7 @@ public class DruidConfiguration {
             try {
                 datasource.setFilters(filters);
             } catch (SQLException e) {
-                System.err.println("druid configuration initialization filter: " + e);
+                logger.error("druid configuration initialization filter failed", e);
             }
             datasource.setConnectionProperties(connectionProperties);
             return datasource;
