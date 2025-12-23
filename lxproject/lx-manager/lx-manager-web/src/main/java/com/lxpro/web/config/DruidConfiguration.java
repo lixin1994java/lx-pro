@@ -5,6 +5,7 @@ import javax.sql.DataSource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
@@ -24,6 +25,12 @@ public class DruidConfiguration {
 
     private static final String DB_PREFIX = "spring.datasource";
 
+    @Value("${druid.login.username}")
+    private String druidLoginUsername;
+
+    @Value("${druid.login.password}")
+    private String druidLoginPassword;
+
     @Bean
     public ServletRegistrationBean druidServlet() {
         logger.info("init Druid Servlet Configuration ");
@@ -33,8 +40,8 @@ public class DruidConfiguration {
         // IP黑名单(共同存在时，deny优先于allow)
         servletRegistrationBean.addInitParameter("deny", "192.168.1.100");
         //控制台管理用户
-        servletRegistrationBean.addInitParameter("loginUsername", "admin");
-        servletRegistrationBean.addInitParameter("loginPassword", "admin");
+        servletRegistrationBean.addInitParameter("loginUsername", druidLoginUsername);
+        servletRegistrationBean.addInitParameter("loginPassword", druidLoginPassword);
         //是否能够重置数据 禁用HTML页面上的“Reset All”功能
         servletRegistrationBean.addInitParameter("resetEnable", "false");
         return servletRegistrationBean;

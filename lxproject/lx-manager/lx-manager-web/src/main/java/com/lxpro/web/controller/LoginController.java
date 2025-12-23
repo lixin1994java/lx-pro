@@ -23,7 +23,7 @@ public class LoginController {
         RestResponseVo restResponseVo = new RestResponseVo();
         User uservo = userService.userLogin(user);
         if(uservo!=null){
-            if (uservo.getUserStatus()==1){
+            if (uservo.getUserStatus() != null && uservo.getUserStatus() == 1){
                 restResponseVo.setData(uservo);
                 restResponseVo.setSuccess(true);
                 restResponseVo.setMeassage("登录成功");
@@ -48,21 +48,16 @@ public class LoginController {
 
         RestResponseVo restResponseVo = new RestResponseVo();
         Integer integer = userService.userRegist(user);
-        if(integer>0){
+        if(integer != null && integer > 0){
             restResponseVo.setSuccess(true);
             restResponseVo.setMeassage("注册成功");
             HashMap<String, Object> map = new HashMap<>();
             map.put("userId",integer);
             restResponseVo.setData(map);
-            System.out.println(map);
-            System.out.println(map);
-            System.out.println("II");
-            System.out.println("2222");
         }else{
             restResponseVo.setSuccess(false);
             restResponseVo.setError_code(1001);
             restResponseVo.setMeassage("注册失败");
-            !YG*YF*
         }
 
         return restResponseVo;
