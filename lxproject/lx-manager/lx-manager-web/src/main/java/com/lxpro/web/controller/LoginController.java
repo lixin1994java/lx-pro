@@ -6,7 +6,6 @@ import com.lxpro.entity.user.User;
 import com.lxpro.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
@@ -18,12 +17,17 @@ public class LoginController {
     @Autowired
     UserService userService;
     @RequestMapping("/login")
-    @ResponseBody
-    private RestResponseVo userLogin(User user){
+    public RestResponseVo userLogin(User user){
         RestResponseVo restResponseVo = new RestResponseVo();
+        if (user == null || isBlank(user.getUsername()) || isBlank(user.getPassword())) {
+            restResponseVo.setSuccess(false);
+            restResponseVo.setError_code(1001);
+            restResponseVo.setMeassage("参数错误");
+            return restResponseVo;
+        }
         User uservo = userService.userLogin(user);
         if(uservo!=null){
-            if (uservo.getUserStatus()==1){
+            if (uservo.getUserStatus() != null && uservo.getUserStatus()==1){
                 restResponseVo.setData(uservo);
                 restResponseVo.setSuccess(true);
                 restResponseVo.setMeassage("登录成功");
@@ -43,29 +47,36 @@ public class LoginController {
     }
 
     @RequestMapping("/regist")
-    @ResponseBody
-    private RestResponseVo regist(User user){
+    public RestResponseVo regist(User user){
 
         RestResponseVo restResponseVo = new RestResponseVo();
+        if (user == null || isBlank(user.getUsername()) || isBlank(user.getPassword())) {
+            restResponseVo.setSuccess(false);
+            restResponseVo.setError_code(1001);
+            restResponseVo.setMeassage("参数错误");
+            return restResponseVo;
+        }
         Integer integer = userService.userRegist(user);
         if(integer>0){
             restResponseVo.setSuccess(true);
             restResponseVo.setMeassage("注册成功");
             HashMap<String, Object> map = new HashMap<>();
-            map.put("userId",integer);
+            if (user.getUserId() != null) {
+                map.put("userId", user.getUserId());
+            }
+            map.put("affectedRows", integer);
             restResponseVo.setData(map);
-            System.out.println(map);
-            System.out.println(map);
-            System.out.println("II");
-            System.out.println("2222");
         }else{
             restResponseVo.setSuccess(false);
             restResponseVo.setError_code(1001);
             restResponseVo.setMeassage("注册失败");
-            !YG*YF*
         }
 
         return restResponseVo;
 
+    }
+
+    private static boolean isBlank(String s) {
+        return s == null || s.trim().isEmpty();
     }
 }

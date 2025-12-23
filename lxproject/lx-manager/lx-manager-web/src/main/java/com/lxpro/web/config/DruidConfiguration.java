@@ -5,6 +5,8 @@ import javax.sql.DataSource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
@@ -25,22 +27,42 @@ public class DruidConfiguration {
     private static final String DB_PREFIX = "spring.datasource";
 
     @Bean
+    @ConditionalOnProperty(prefix = "lx.druid.stat", name = "enabled", havingValue = "true")
     public ServletRegistrationBean druidServlet() {
         logger.info("init Druid Servlet Configuration ");
         ServletRegistrationBean servletRegistrationBean = new ServletRegistrationBean(new StatViewServlet(), "/druid/*");
-        // IP白名单
-        servletRegistrationBean.addInitParameter("allow", "*");
+        // 说明：druid 监控页面属于高危入口，默认关闭；开启时仅允许白名单 IP 访问，且必须配置账号密码
+        // IP白名单（默认仅本机）
+        String allow = System.getProperty("lx.druid.stat.allow",
+                System.getenv().getOrDefault("LX_DRUID_STAT_ALLOW", "127.0.0.1"));
+        servletRegistrationBean.addInitParameter("allow", allow);
+
         // IP黑名单(共同存在时，deny优先于allow)
-        servletRegistrationBean.addInitParameter("deny", "192.168.1.100");
-        //控制台管理用户
-        servletRegistrationBean.addInitParameter("loginUsername", "admin");
-        servletRegistrationBean.addInitParameter("loginPassword", "admin");
+        String deny = System.getProperty("lx.druid.stat.deny",
+                System.getenv().getOrDefault("LX_DRUID_STAT_DENY", ""));
+        if (!isBlank(deny)) {
+            servletRegistrationBean.addInitParameter("deny", deny);
+        }
+
+        // 控制台管理用户（必须显式配置，避免硬编码弱口令）
+        String loginUsername = System.getProperty("lx.druid.stat.loginUsername",
+                System.getenv().getOrDefault("LX_DRUID_STAT_LOGIN_USERNAME", ""));
+        String loginPassword = System.getProperty("lx.druid.stat.loginPassword",
+                System.getenv().getOrDefault("LX_DRUID_STAT_LOGIN_PASSWORD", ""));
+        if (isBlank(loginUsername) || isBlank(loginPassword)) {
+            throw new IllegalStateException("已开启 lx.druid.stat.enabled=true，但未配置 druid 监控账号密码。"
+                    + "请设置系统属性 lx.druid.stat.loginUsername/loginPassword 或环境变量 "
+                    + "LX_DRUID_STAT_LOGIN_USERNAME/LX_DRUID_STAT_LOGIN_PASSWORD");
+        }
+        servletRegistrationBean.addInitParameter("loginUsername", loginUsername);
+        servletRegistrationBean.addInitParameter("loginPassword", loginPassword);
         //是否能够重置数据 禁用HTML页面上的“Reset All”功能
         servletRegistrationBean.addInitParameter("resetEnable", "false");
         return servletRegistrationBean;
     }
 
     @Bean
+    @ConditionalOnProperty(prefix = "lx.druid.stat", name = "enabled", havingValue = "true")
     public FilterRegistrationBean filterRegistrationBean() {
         FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(new WebStatFilter());
         filterRegistrationBean.addUrlPatterns("/*");
@@ -73,6 +95,7 @@ public class DruidConfiguration {
 
         @Bean     //声明其为Bean实例
         @Primary  //在同样的DataSource中，首先使用被标注的DataSource
+        @ConditionalOnProperty(prefix = DB_PREFIX, name = "url")
         public DataSource dataSource() {
             DruidDataSource datasource = new DruidDataSource();
             datasource.setUrl(url);
@@ -96,7 +119,7 @@ public class DruidConfiguration {
             try {
                 datasource.setFilters(filters);
             } catch (SQLException e) {
-                System.err.println("druid configuration initialization filter: " + e);
+                logger.error("druid filters 初始化失败", e);
             }
             datasource.setConnectionProperties(connectionProperties);
             return datasource;
@@ -247,4 +270,7 @@ public class DruidConfiguration {
         }
     }
 
+    private static boolean isBlank(String s) {
+        return s == null || s.trim().isEmpty();
+    }
 }
