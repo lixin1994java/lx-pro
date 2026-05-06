@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JSON/XML 格式化工具</title>
-    <link rel="stylesheet" href="../js/layui/css/layui.css" media="all">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/layui-src@2.9.11/dist/css/layui.css" media="all">
     <style>
         body {
             background: #f6f8fb;
@@ -66,6 +66,21 @@
             padding: 0 2px;
         }
 
+        .search-highlight {
+            background: #8cc5ff;
+            color: #0d2034;
+            border-radius: 3px;
+            padding: 0 2px;
+        }
+
+        .search-highlight-active {
+            background: #ff9f43;
+            color: #2f1200;
+            border-radius: 3px;
+            padding: 0 2px;
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
+        }
+
         .error-text {
             color: #ff5722;
             margin-top: 6px;
@@ -99,13 +114,24 @@
                    placeholder="多个关键词用空格或逗号分隔，例如：name,id,status">
         </div>
     </div>
+    <div class="tool-row">
+        <label class="layui-form-label" style="width: 90px; padding-left: 0;">搜索定位</label>
+        <div class="layui-input-block" style="margin-left: 100px;">
+            <input id="searchInput" type="text" class="layui-input"
+                   placeholder="输入要定位的词，支持上下一个跳转（Enter/F3）">
+        </div>
+    </div>
     <div class="tool-actions">
         <button id="formatBtn" class="layui-btn">格式化并高亮</button>
         <button id="highlightBtn" class="layui-btn layui-btn-normal">仅重新高亮</button>
+        <button id="searchBtn" class="layui-btn layui-btn-primary">定位首个</button>
+        <button id="prevBtn" class="layui-btn layui-btn-primary">上一个</button>
+        <button id="nextBtn" class="layui-btn layui-btn-primary">下一个</button>
         <button id="copyBtn" class="layui-btn layui-btn-warm">复制结果</button>
         <button id="clearBtn" class="layui-btn layui-btn-primary">清空</button>
     </div>
     <div id="errorText" class="error-text"></div>
+    <div id="searchMeta" style="margin-bottom: 8px; color: #666;"></div>
     <pre id="resultView" class="result-box"></pre>
 </div>
 
@@ -114,9 +140,14 @@
         var resultView = document.getElementById("resultView");
         var sourceText = document.getElementById("sourceText");
         var keywordsInput = document.getElementById("keywordsInput");
+        var searchInput = document.getElementById("searchInput");
         var dataType = document.getElementById("dataType");
         var errorText = document.getElementById("errorText");
+        var searchMeta = document.getElementById("searchMeta");
         var lastFormattedText = "";
+        var searchMatches = [];
+        var activeSearchIndex = -1;
+        var lastSearchWord = "";
 
         document.getElementById("formatBtn").addEventListener("click", function () {
             clearStatus();
@@ -129,7 +160,7 @@
             try {
                 var formatted = formatContent(content, dataType.value);
                 lastFormattedText = formatted;
-                renderHighlightedResult(formatted, keywordsInput.value);
+                renderHighlightedResult(formatted, keywordsInput.value, searchInput.value, true);
             } catch (error) {
                 showStatus(error.message, true);
                 resultView.textContent = "";
@@ -142,7 +173,19 @@
                 return;
             }
             clearStatus();
-            renderHighlightedResult(lastFormattedText, keywordsInput.value);
+            renderHighlightedResult(lastFormattedText, keywordsInput.value, searchInput.value, true);
+        });
+
+        document.getElementById("searchBtn").addEventListener("click", function () {
+            locateFirst();
+        });
+
+        document.getElementById("prevBtn").addEventListener("click", function () {
+            locateStep(-1);
+        });
+
+        document.getElementById("nextBtn").addEventListener("click", function () {
+            locateStep(1);
         });
 
         document.getElementById("copyBtn").addEventListener("click", function () {
@@ -156,9 +199,34 @@
         document.getElementById("clearBtn").addEventListener("click", function () {
             sourceText.value = "";
             keywordsInput.value = "";
+            searchInput.value = "";
             clearStatus();
             lastFormattedText = "";
+            searchMatches = [];
+            activeSearchIndex = -1;
+            lastSearchWord = "";
+            searchMeta.textContent = "";
             resultView.textContent = "";
+        });
+
+        searchInput.addEventListener("keydown", function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                locateFirst();
+            }
+        });
+
+        document.addEventListener("keydown", function (event) {
+            var key = (event.key || "").toLowerCase();
+            if ((event.ctrlKey || event.metaKey) && key === "enter") {
+                event.preventDefault();
+                document.getElementById("formatBtn").click();
+                return;
+            }
+            if (event.key === "F3") {
+                event.preventDefault();
+                locateStep(event.shiftKey ? -1 : 1);
+            }
         });
 
         function formatContent(content, type) {
@@ -217,8 +285,16 @@
             return out.join("\n");
         }
 
-        function renderHighlightedResult(text, keywordRaw) {
-            resultView.innerHTML = buildHighlightedHtml(text, parseKeywords(keywordRaw));
+        function renderHighlightedResult(text, keywordRaw, searchWord, resetSearchToFirst) {
+            var keywords = parseKeywords(keywordRaw);
+            var normalizedSearchWord = (searchWord || "").trim();
+            var rendered = buildHighlightedHtml(text, keywords, normalizedSearchWord, resetSearchToFirst);
+            resultView.innerHTML = rendered.html;
+            searchMatches = rendered.searchMatches;
+            activeSearchIndex = rendered.activeSearchIndex;
+            lastSearchWord = normalizedSearchWord;
+            updateSearchMeta();
+            scrollToActiveMatch();
         }
 
         function parseKeywords(keywordRaw) {
@@ -238,33 +314,98 @@
             return keywords;
         }
 
-        function buildHighlightedHtml(text, keywords) {
-            if (!keywords || keywords.length === 0) {
-                return escapeHtml(text);
+        function buildHighlightedHtml(text, keywords, searchWord, resetSearchToFirst) {
+            var len = text.length;
+            if (len === 0) {
+                return {html: "", searchMatches: [], activeSearchIndex: -1};
             }
 
-            keywords.sort(function (a, b) {
-                return b.length - a.length;
-            });
-
-            var escapedWords = [];
-            for (var i = 0; i < keywords.length; i++) {
-                escapedWords.push(escapeRegExp(keywords[i]));
+            var styleMap = new Array(len);
+            for (var si = 0; si < len; si++) {
+                styleMap[si] = 0;
             }
 
-            var matcher = new RegExp("(" + escapedWords.join("|") + ")", "gi");
-            var result = "";
-            var lastIndex = 0;
+            for (var k = 0; k < keywords.length; k++) {
+                applyStyleForTerm(text, keywords[k], styleMap, 1);
+            }
+
+            var searchRangeList = collectRanges(text, searchWord);
+            var nextActiveSearchIndex = activeSearchIndex;
+            if (!searchWord || searchRangeList.length === 0) {
+                nextActiveSearchIndex = -1;
+            } else if (resetSearchToFirst || nextActiveSearchIndex < 0 || nextActiveSearchIndex >= searchRangeList.length) {
+                nextActiveSearchIndex = 0;
+            }
+
+            for (var sr = 0; sr < searchRangeList.length; sr++) {
+                var range = searchRangeList[sr];
+                var styleCode = (sr === nextActiveSearchIndex) ? 3 : 2;
+                for (var r = range.start; r < range.end; r++) {
+                    styleMap[r] = styleCode;
+                }
+            }
+
+            var html = "";
+            var segmentStart = 0;
+            var currentStyle = styleMap[0];
+            for (var i = 1; i <= len; i++) {
+                var style = (i < len) ? styleMap[i] : -1;
+                if (style !== currentStyle) {
+                    html += renderSegment(text.slice(segmentStart, i), currentStyle);
+                    segmentStart = i;
+                    currentStyle = style;
+                }
+            }
+            return {
+                html: html,
+                searchMatches: searchRangeList,
+                activeSearchIndex: nextActiveSearchIndex
+            };
+        }
+
+        function applyStyleForTerm(text, term, styleMap, styleCode) {
+            var ranges = collectRanges(text, term);
+            for (var i = 0; i < ranges.length; i++) {
+                for (var p = ranges[i].start; p < ranges[i].end; p++) {
+                    if (styleMap[p] < styleCode) {
+                        styleMap[p] = styleCode;
+                    }
+                }
+            }
+        }
+
+        function collectRanges(text, term) {
+            if (!term) {
+                return [];
+            }
+            var matcher = new RegExp(escapeRegExp(term), "gi");
             var match;
-
+            var result = [];
             while ((match = matcher.exec(text)) !== null) {
                 var start = match.index;
-                result += escapeHtml(text.slice(lastIndex, start));
-                result += '<span class="keyword-highlight">' + escapeHtml(match[0]) + "</span>";
-                lastIndex = matcher.lastIndex;
+                result.push({start: start, end: start + match[0].length});
+                if (match[0].length === 0) {
+                    matcher.lastIndex++;
+                }
             }
-            result += escapeHtml(text.slice(lastIndex));
             return result;
+        }
+
+        function renderSegment(segmentText, styleCode) {
+            if (segmentText === "") {
+                return "";
+            }
+            var escaped = escapeHtml(segmentText);
+            if (styleCode === 1) {
+                return '<span class="keyword-highlight">' + escaped + "</span>";
+            }
+            if (styleCode === 2) {
+                return '<span class="search-highlight">' + escaped + "</span>";
+            }
+            if (styleCode === 3) {
+                return '<span class="search-highlight-active">' + escaped + "</span>";
+            }
+            return escaped;
         }
 
         function escapeHtml(str) {
@@ -315,6 +456,83 @@
             errorText.style.color = "#ff5722";
             errorText.textContent = "";
         }
+
+        function locateFirst() {
+            if (!lastFormattedText) {
+                showStatus("请先执行格式化。", true);
+                return;
+            }
+            var word = (searchInput.value || "").trim();
+            if (!word) {
+                showStatus("请输入要搜索定位的词。", true);
+                return;
+            }
+            clearStatus();
+            renderHighlightedResult(lastFormattedText, keywordsInput.value, word, true);
+            if (searchMatches.length === 0) {
+                showStatus("未找到匹配项。", true);
+            }
+        }
+
+        function locateStep(step) {
+            if (!lastFormattedText) {
+                showStatus("请先执行格式化。", true);
+                return;
+            }
+            var word = (searchInput.value || "").trim();
+            if (!word) {
+                showStatus("请输入要搜索定位的词。", true);
+                return;
+            }
+            if (word !== lastSearchWord) {
+                renderHighlightedResult(lastFormattedText, keywordsInput.value, word, true);
+                if (searchMatches.length === 0) {
+                    showStatus("未找到匹配项。", true);
+                    return;
+                }
+                if (step < 0) {
+                    activeSearchIndex = searchMatches.length - 1;
+                    renderHighlightedResult(lastFormattedText, keywordsInput.value, word, false);
+                }
+                clearStatus();
+                return;
+            }
+
+            if (searchMatches.length === 0) {
+                renderHighlightedResult(lastFormattedText, keywordsInput.value, word, true);
+                if (searchMatches.length === 0) {
+                    showStatus("未找到匹配项。", true);
+                    return;
+                }
+            }
+            activeSearchIndex = (activeSearchIndex + step + searchMatches.length) % searchMatches.length;
+            renderHighlightedResult(lastFormattedText, keywordsInput.value, word, false);
+            clearStatus();
+        }
+
+        function updateSearchMeta() {
+            if ((searchInput.value || "").trim() === "") {
+                searchMeta.textContent = "快捷键：Ctrl/Cmd + Enter 格式化，F3 下一个，Shift + F3 上一个";
+                return;
+            }
+            if (searchMatches.length === 0) {
+                searchMeta.textContent = "匹配：0";
+                return;
+            }
+            searchMeta.textContent = "匹配：" + (activeSearchIndex + 1) + " / " + searchMatches.length;
+        }
+
+        function scrollToActiveMatch() {
+            if (activeSearchIndex < 0) {
+                return;
+            }
+            var node = resultView.querySelector(".search-highlight-active");
+            if (node && typeof node.scrollIntoView === "function") {
+                node.scrollIntoView({behavior: "smooth", block: "center"});
+            }
+        }
+
+        updateSearchMeta();
     })();
 </script>
 </body>
