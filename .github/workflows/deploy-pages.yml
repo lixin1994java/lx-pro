@@ -24,6 +24,8 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    env:
+      PAGES_DEPLOY_TOKEN: ${{ secrets.PAGES_DEPLOY_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -45,7 +47,7 @@ jobs:
           fi
 
       - name: Fail with setup guidance when Pages is disabled
-        if: steps.pages_check.outputs.status != '200' && secrets.PAGES_DEPLOY_TOKEN == ''
+        if: steps.pages_check.outputs.status != '200' && env.PAGES_DEPLOY_TOKEN == ''
         run: |
           echo "::error::GitHub Pages 尚未启用。请先到仓库 Settings > Pages，将 Source 设为 GitHub Actions。"
           echo "::error::保存后回到 Actions 页面重试本工作流。"
@@ -55,8 +57,8 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
         with:
-          token: ${{ secrets.PAGES_DEPLOY_TOKEN != '' && secrets.PAGES_DEPLOY_TOKEN || github.token }}
-          enablement: ${{ secrets.PAGES_DEPLOY_TOKEN != '' }}
+          token: ${{ env.PAGES_DEPLOY_TOKEN != '' && env.PAGES_DEPLOY_TOKEN || github.token }}
+          enablement: ${{ env.PAGES_DEPLOY_TOKEN != '' }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
