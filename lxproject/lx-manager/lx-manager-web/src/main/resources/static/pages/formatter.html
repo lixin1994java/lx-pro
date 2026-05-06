@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON/XML 格式化工具</title>
+    <link rel="stylesheet" href="../js/layui/css/layui.css" media="all">
+    <style>
+        body {
+            background: #f6f8fb;
+            padding: 24px;
+            box-sizing: border-box;
+            font-family: "Helvetica Neue", Arial, sans-serif;
+        }
+
+        .tool-card {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .tool-title {
+            margin-bottom: 18px;
+            font-size: 24px;
+            font-weight: 600;
+            color: #1f2d3d;
+        }
+
+        .tool-row {
+            margin-bottom: 14px;
+        }
+
+        .tool-actions {
+            margin-top: 12px;
+            margin-bottom: 12px;
+        }
+
+        .tool-actions .layui-btn {
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .result-box {
+            margin-top: 14px;
+            border: 1px solid #e6e6e6;
+            border-radius: 4px;
+            background: #1e1f22;
+            color: #f8f8f2;
+            min-height: 320px;
+            max-height: 600px;
+            overflow: auto;
+            padding: 14px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.6;
+            font-family: Consolas, "Courier New", monospace;
+        }
+
+        .keyword-highlight {
+            background: #ffec99;
+            color: #222;
+            border-radius: 3px;
+            padding: 0 2px;
+        }
+
+        .error-text {
+            color: #ff5722;
+            margin-top: 6px;
+            min-height: 22px;
+        }
+    </style>
+</head>
+<body>
+<div class="tool-card">
+    <h1 class="tool-title">JSON / XML 格式化工具</h1>
+    <div class="tool-row">
+        <label class="layui-form-label" style="width: 90px; padding-left: 0;">数据类型</label>
+        <div class="layui-input-inline" style="width: 180px;">
+            <select id="dataType" class="layui-input">
+                <option value="json">JSON</option>
+                <option value="xml">XML</option>
+            </select>
+        </div>
+    </div>
+    <div class="tool-row">
+        <label class="layui-form-label" style="width: 90px; padding-left: 0;">原始内容</label>
+        <div class="layui-input-block" style="margin-left: 100px;">
+            <textarea id="sourceText" class="layui-textarea" style="min-height: 220px;"
+                      placeholder="请输入 JSON 或 XML 字符串"></textarea>
+        </div>
+    </div>
+    <div class="tool-row">
+        <label class="layui-form-label" style="width: 90px; padding-left: 0;">关键词</label>
+        <div class="layui-input-block" style="margin-left: 100px;">
+            <input id="keywordsInput" type="text" class="layui-input"
+                   placeholder="多个关键词用空格或逗号分隔，例如：name,id,status">
+        </div>
+    </div>
+    <div class="tool-actions">
+        <button id="formatBtn" class="layui-btn">格式化并高亮</button>
+        <button id="highlightBtn" class="layui-btn layui-btn-normal">仅重新高亮</button>
+        <button id="copyBtn" class="layui-btn layui-btn-warm">复制结果</button>
+        <button id="clearBtn" class="layui-btn layui-btn-primary">清空</button>
+    </div>
+    <div id="errorText" class="error-text"></div>
+    <pre id="resultView" class="result-box"></pre>
+</div>
+
+<script>
+    (function () {
+        var resultView = document.getElementById("resultView");
+        var sourceText = document.getElementById("sourceText");
+        var keywordsInput = document.getElementById("keywordsInput");
+        var dataType = document.getElementById("dataType");
+        var errorText = document.getElementById("errorText");
+        var lastFormattedText = "";
+
+        document.getElementById("formatBtn").addEventListener("click", function () {
+            clearStatus();
+            var content = sourceText.value;
+            if (!content || !content.trim()) {
+                showStatus("请输入要处理的内容。", true);
+                return;
+            }
+
+            try {
+                var formatted = formatContent(content, dataType.value);
+                lastFormattedText = formatted;
+                renderHighlightedResult(formatted, keywordsInput.value);
+            } catch (error) {
+                showStatus(error.message, true);
+                resultView.textContent = "";
+            }
+        });
+
+        document.getElementById("highlightBtn").addEventListener("click", function () {
+            if (!lastFormattedText) {
+                showStatus("请先执行格式化。", true);
+                return;
+            }
+            clearStatus();
+            renderHighlightedResult(lastFormattedText, keywordsInput.value);
+        });
+
+        document.getElementById("copyBtn").addEventListener("click", function () {
+            if (!lastFormattedText) {
+                showStatus("当前没有可复制的结果。", true);
+                return;
+            }
+            copyText(lastFormattedText);
+        });
+
+        document.getElementById("clearBtn").addEventListener("click", function () {
+            sourceText.value = "";
+            keywordsInput.value = "";
+            clearStatus();
+            lastFormattedText = "";
+            resultView.textContent = "";
+        });
+
+        function formatContent(content, type) {
+            if (type === "json") {
+                try {
+                    var parsed = JSON.parse(content);
+                    return JSON.stringify(parsed, null, 2);
+                } catch (error) {
+                    throw new Error("JSON 格式不合法，请检查后重试。");
+                }
+            }
+
+            if (type === "xml") {
+                return formatXml(content);
+            }
+
+            throw new Error("不支持的数据类型。");
+        }
+
+        function formatXml(xmlString) {
+            var parser = new DOMParser();
+            var xmlDoc = parser.parseFromString(xmlString, "application/xml");
+            if (xmlDoc.getElementsByTagName("parsererror").length > 0) {
+                throw new Error("XML 格式不合法，请检查后重试。");
+            }
+
+            var serialized = new XMLSerializer().serializeToString(xmlDoc);
+            var xml = serialized.replace(/(>)(<)(\/*)/g, "$1\n$2$3");
+            var lines = xml.split("\n");
+            var indent = 0;
+            var pad = "  ";
+            var out = [];
+
+            for (var i = 0; i < lines.length; i++) {
+                var line = lines[i].trim();
+                if (!line) {
+                    continue;
+                }
+
+                var isClosingTag = /^<\/[^>]+>$/.test(line);
+                var isDeclarationOrComment = /^<\?/.test(line) || /^<!/.test(line);
+                var isSelfClosingTag = /\/>$/.test(line);
+                var isOpeningTag = /^<[^!?\/][^>]*>$/.test(line) && !isSelfClosingTag && !/<\/[^>]+>$/.test(line);
+
+                if (isClosingTag) {
+                    indent = Math.max(indent - 1, 0);
+                }
+
+                out.push(new Array(indent + 1).join(pad) + line);
+
+                if (isOpeningTag && !isDeclarationOrComment) {
+                    indent++;
+                }
+            }
+
+            return out.join("\n");
+        }
+
+        function renderHighlightedResult(text, keywordRaw) {
+            resultView.innerHTML = buildHighlightedHtml(text, parseKeywords(keywordRaw));
+        }
+
+        function parseKeywords(keywordRaw) {
+            if (!keywordRaw) {
+                return [];
+            }
+            var list = keywordRaw.split(/[\s,，]+/);
+            var unique = {};
+            var keywords = [];
+            for (var i = 0; i < list.length; i++) {
+                var word = list[i].trim();
+                if (word && !unique[word]) {
+                    unique[word] = true;
+                    keywords.push(word);
+                }
+            }
+            return keywords;
+        }
+
+        function buildHighlightedHtml(text, keywords) {
+            if (!keywords || keywords.length === 0) {
+                return escapeHtml(text);
+            }
+
+            keywords.sort(function (a, b) {
+                return b.length - a.length;
+            });
+
+            var escapedWords = [];
+            for (var i = 0; i < keywords.length; i++) {
+                escapedWords.push(escapeRegExp(keywords[i]));
+            }
+
+            var matcher = new RegExp("(" + escapedWords.join("|") + ")", "gi");
+            var result = "";
+            var lastIndex = 0;
+            var match;
+
+            while ((match = matcher.exec(text)) !== null) {
+                var start = match.index;
+                result += escapeHtml(text.slice(lastIndex, start));
+                result += '<span class="keyword-highlight">' + escapeHtml(match[0]) + "</span>";
+                lastIndex = matcher.lastIndex;
+            }
+            result += escapeHtml(text.slice(lastIndex));
+            return result;
+        }
+
+        function escapeHtml(str) {
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        }
+
+        function escapeRegExp(str) {
+            return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        }
+
+        function copyText(text) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function () {
+                    showStatus("复制成功。", false);
+                }).catch(function () {
+                    fallbackCopyText(text);
+                });
+                return;
+            }
+            fallbackCopyText(text);
+        }
+
+        function fallbackCopyText(text) {
+            var temp = document.createElement("textarea");
+            temp.value = text;
+            document.body.appendChild(temp);
+            temp.select();
+            var successful = document.execCommand("copy");
+            document.body.removeChild(temp);
+            if (successful) {
+                showStatus("复制成功。", false);
+            } else {
+                showStatus("复制失败，请手动复制。", true);
+            }
+        }
+
+        function showStatus(message, isError) {
+            errorText.style.color = isError ? "#ff5722" : "#16b777";
+            errorText.textContent = message;
+        }
+
+        function clearStatus() {
+            errorText.style.color = "#ff5722";
+            errorText.textContent = "";
+        }
+    })();
+</script>
+</body>
+</html>
