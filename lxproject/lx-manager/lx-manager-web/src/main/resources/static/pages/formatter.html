@@ -158,12 +158,23 @@
             }
 
             try {
-                var formatted = formatContent(content, dataType.value);
+                var formatted;
+                if (dataType.value === "json") {
+                    var jsonResult = formatJsonWithAssist(content);
+                    formatted = jsonResult.formatted;
+                    if (jsonResult.autoFixed) {
+                        showStatus("检测到缺失双引号，已一键修正并完成格式化。", false);
+                    }
+                } else {
+                    formatted = formatContent(content, dataType.value);
+                }
                 lastFormattedText = formatted;
                 renderHighlightedResult(formatted, keywordsInput.value, searchInput.value, true);
             } catch (error) {
                 showStatus(error.message, true);
-                resultView.textContent = "";
+                if (dataType.value !== "json") {
+                    resultView.textContent = "";
+                }
             }
         });
 
@@ -244,6 +255,129 @@
             }
 
             throw new Error("不支持的数据类型。");
+        }
+
+        function formatJsonWithAssist(content) {
+            try {
+                return {
+                    formatted: JSON.stringify(JSON.parse(content), null, 2),
+                    autoFixed: false
+                };
+            } catch (error) {
+                var errorInfo = getJsonErrorInfo(content, error);
+                highlightJsonErrorPosition(errorInfo);
+                var fixedContent = autoFixMissingQuotedKeys(content);
+                if (fixedContent !== content) {
+                    var shouldFix = window.confirm("检测到可能是对象键缺少双引号，是否一键修正并继续格式化？");
+                    if (shouldFix) {
+                        try {
+                            sourceText.value = fixedContent;
+                            return {
+                                formatted: JSON.stringify(JSON.parse(fixedContent), null, 2),
+                                autoFixed: true
+                            };
+                        } catch (fixedError) {
+                            var fixedInfo = getJsonErrorInfo(fixedContent, fixedError);
+                            highlightJsonErrorPosition(fixedInfo);
+                            throw new Error(buildJsonErrorMessage(fixedInfo, true));
+                        }
+                    }
+                }
+                throw new Error(buildJsonErrorMessage(errorInfo, false));
+            }
+        }
+
+        function getJsonErrorInfo(content, error) {
+            var index = extractJsonErrorIndex(content, error);
+            var line = 0;
+            var column = 0;
+            if (index >= 0) {
+                var lineCol = getLineColumnByIndex(content, index);
+                line = lineCol.line;
+                column = lineCol.column;
+            }
+            return {
+                index: index,
+                line: line,
+                column: column,
+                preview: buildJsonErrorPreview(content, index),
+                rawMessage: error && error.message ? error.message : ""
+            };
+        }
+
+        function extractJsonErrorIndex(content, error) {
+            var message = error && error.message ? error.message : "";
+            var posMatch = message.match(/position\s+(\d+)/i);
+            if (posMatch) {
+                return parseInt(posMatch[1], 10);
+            }
+            var lineColMatch = message.match(/line\s+(\d+)\s+column\s+(\d+)/i);
+            if (lineColMatch) {
+                return indexFromLineColumn(content, parseInt(lineColMatch[1], 10), parseInt(lineColMatch[2], 10));
+            }
+            return -1;
+        }
+
+        function getLineColumnByIndex(content, index) {
+            var safeIndex = Math.max(0, Math.min(index, content.length));
+            var before = content.slice(0, safeIndex).split("\n");
+            return {
+                line: before.length,
+                column: before[before.length - 1].length + 1
+            };
+        }
+
+        function indexFromLineColumn(content, line, column) {
+            if (line <= 0 || column <= 0) {
+                return -1;
+            }
+            var lines = content.split("\n");
+            if (line > lines.length) {
+                return -1;
+            }
+            var index = 0;
+            for (var i = 0; i < line - 1; i++) {
+                index += lines[i].length + 1;
+            }
+            return index + column - 1;
+        }
+
+        function buildJsonErrorPreview(content, index) {
+            if (index < 0) {
+                return "";
+            }
+            var lineCol = getLineColumnByIndex(content, index);
+            var lines = content.split("\n");
+            var lineText = lines[lineCol.line - 1] || "";
+            var pointer = new Array(Math.max(lineCol.column, 1)).join(" ") + "^";
+            return lineText + "\n" + pointer;
+        }
+
+        function buildJsonErrorMessage(errorInfo, isAutoFixedRetry) {
+            var prefix = isAutoFixedRetry ? "JSON 自动修正后仍有错误" : "JSON 格式错误";
+            if (errorInfo.line > 0) {
+                return prefix + "，第 " + errorInfo.line + " 行第 " + errorInfo.column + " 列附近有问题。";
+            }
+            return prefix + "，但暂时无法定位具体行列。";
+        }
+
+        function highlightJsonErrorPosition(errorInfo) {
+            if (!errorInfo) {
+                return;
+            }
+            if (errorInfo.preview) {
+                resultView.textContent = "错误定位：\n" + errorInfo.preview;
+            }
+            if (errorInfo.index >= 0 && typeof sourceText.setSelectionRange === "function") {
+                var caretStart = Math.min(errorInfo.index, sourceText.value.length);
+                var caretEnd = Math.min(caretStart + 1, sourceText.value.length);
+                sourceText.focus();
+                sourceText.setSelectionRange(caretStart, caretEnd);
+            }
+        }
+
+        function autoFixMissingQuotedKeys(content) {
+            return content.replace(/([{,]\s*)([A-Za-z_\u4e00-\u9fa5$][\w\-\u4e00-\u9fa5$]*)(\s*:)/g, '$1"$2"$3');
         }
 
         function formatXml(xmlString) {
