@@ -163,7 +163,8 @@
                     var jsonResult = formatJsonWithAssist(content);
                     formatted = jsonResult.formatted;
                     if (jsonResult.autoFixed) {
-                        showStatus("检测到缺失双引号，已一键修正并完成格式化。", false);
+                        var changeText = jsonResult.changes && jsonResult.changes.length ? "（" + jsonResult.changes.join("、") + "）" : "";
+                        showStatus("已完成智能修正并格式化 " + changeText, false);
                     }
                 } else {
                     formatted = formatContent(content, dataType.value);
@@ -258,33 +259,335 @@
         }
 
         function formatJsonWithAssist(content) {
-            try {
+            var parsed = tryParseJson(content);
+            if (parsed.ok) {
                 return {
-                    formatted: JSON.stringify(JSON.parse(content), null, 2),
-                    autoFixed: false
+                    formatted: JSON.stringify(parsed.value, null, 2),
+                    autoFixed: false,
+                    changes: []
                 };
-            } catch (error) {
-                var errorInfo = getJsonErrorInfo(content, error);
-                highlightJsonErrorPosition(errorInfo);
-                var fixedContent = autoFixMissingQuotedKeys(content);
-                if (fixedContent !== content) {
-                    var shouldFix = window.confirm("检测到可能是对象键缺少双引号，是否一键修正并继续格式化？");
-                    if (shouldFix) {
-                        try {
-                            sourceText.value = fixedContent;
+            }
+
+            var errorInfo = getJsonErrorInfo(content, parsed.error);
+            highlightJsonErrorPosition(errorInfo);
+
+            var repaired = applyJsonRepairPipeline(content);
+            if (repaired.text !== content) {
+                var changeText = repaired.changes.length ? "，将尝试：" + repaired.changes.join("、") : "";
+                var shouldFix = window.confirm("检测到 JSON 有问题，是否一键智能修正" + changeText + "？");
+                if (shouldFix) {
+                    var mergedChanges = repaired.changes.slice();
+                    var fixedText = repaired.text;
+                    for (var round = 0; round < 2; round++) {
+                        var roundParsed = tryParseJson(fixedText);
+                        if (roundParsed.ok) {
+                            sourceText.value = fixedText;
                             return {
-                                formatted: JSON.stringify(JSON.parse(fixedContent), null, 2),
-                                autoFixed: true
+                                formatted: JSON.stringify(roundParsed.value, null, 2),
+                                autoFixed: true,
+                                changes: mergedChanges
                             };
-                        } catch (fixedError) {
-                            var fixedInfo = getJsonErrorInfo(fixedContent, fixedError);
-                            highlightJsonErrorPosition(fixedInfo);
-                            throw new Error(buildJsonErrorMessage(fixedInfo, true));
                         }
+                        var nextRepair = applyJsonRepairPipeline(fixedText);
+                        if (nextRepair.text === fixedText) {
+                            var fixedInfo = getJsonErrorInfo(fixedText, roundParsed.error);
+                            highlightJsonErrorPosition(fixedInfo);
+                            throw new Error(buildJsonErrorMessage(fixedInfo, true, mergedChanges));
+                        }
+                        fixedText = nextRepair.text;
+                        mergedChanges = mergeChangeList(mergedChanges, nextRepair.changes);
+                    }
+
+                    var finalParsed = tryParseJson(fixedText);
+                    if (finalParsed.ok) {
+                        sourceText.value = fixedText;
+                        return {
+                            formatted: JSON.stringify(finalParsed.value, null, 2),
+                            autoFixed: true,
+                            changes: mergedChanges
+                        };
+                    }
+                    var finalInfo = getJsonErrorInfo(fixedText, finalParsed.error);
+                    highlightJsonErrorPosition(finalInfo);
+                    throw new Error(buildJsonErrorMessage(finalInfo, true, mergedChanges));
+                }
+            }
+            throw new Error(buildJsonErrorMessage(errorInfo, false, repaired.changes));
+        }
+
+        function tryParseJson(content) {
+            try {
+                return {ok: true, value: JSON.parse(content)};
+            } catch (error) {
+                return {ok: false, error: error};
+            }
+        }
+
+        function applyJsonRepairPipeline(content) {
+            var text = content;
+            var changes = [];
+
+            function applyFix(name, fixer) {
+                var next = fixer(text);
+                if (next !== text) {
+                    text = next;
+                    changes.push(name);
+                }
+            }
+
+            applyFix("清理包装与特殊符号", normalizeJsonInput);
+            applyFix("去除注释", stripJsonComments);
+            applyFix("对象键补双引号", quoteUnquotedKeys);
+            applyFix("单引号字符串转双引号", convertSingleQuotedStrings);
+            applyFix("常见字面量转 JSON", normalizeCommonLiterals);
+            applyFix("补全缺失逗号", addMissingCommas);
+            applyFix("移除尾随逗号", removeTrailingCommas);
+            applyFix("补全括号", balanceJsonBrackets);
+
+            return {
+                text: text,
+                changes: changes
+            };
+        }
+
+        function normalizeJsonInput(content) {
+            var text = content;
+            text = text.replace(/^\uFEFF/, "");
+            text = stripMarkdownCodeFence(text);
+            text = text
+                .replace(/[“”]/g, "\"")
+                .replace(/[‘’]/g, "'")
+                .replace(/，/g, ",")
+                .replace(/：/g, ":")
+                .replace(/；/g, ",")
+                .replace(/[｛]/g, "{")
+                .replace(/[｝]/g, "}")
+                .replace(/[【]/g, "[")
+                .replace(/[】]/g, "]");
+
+            var trimmed = text.trim();
+            trimmed = trimmed
+                .replace(/^\s*(?:var|let|const)\s+[A-Za-z_$][\w$]*\s*=\s*/, "")
+                .replace(/^\s*[A-Za-z_$][\w$]*\s*=\s*/, "")
+                .replace(/;\s*$/, "");
+
+            if (trimmed.charAt(0) === "(" && trimmed.charAt(trimmed.length - 1) === ")") {
+                var inner = trimmed.slice(1, -1).trim();
+                if ((inner.charAt(0) === "{" && inner.charAt(inner.length - 1) === "}") ||
+                    (inner.charAt(0) === "[" && inner.charAt(inner.length - 1) === "]")) {
+                    trimmed = inner;
+                }
+            }
+            return trimmed;
+        }
+
+        function stripMarkdownCodeFence(content) {
+            var text = content.trim();
+            if (/^```/i.test(text) && /```$/.test(text)) {
+                return text
+                    .replace(/^```(?:json|javascript|js)?\s*/i, "")
+                    .replace(/\s*```$/, "");
+            }
+            return content;
+        }
+
+        function stripJsonComments(content) {
+            var out = "";
+            var inDouble = false;
+            var inSingle = false;
+            var inLineComment = false;
+            var inBlockComment = false;
+
+            for (var i = 0; i < content.length; i++) {
+                var ch = content.charAt(i);
+                var next = i + 1 < content.length ? content.charAt(i + 1) : "";
+
+                if (inLineComment) {
+                    if (ch === "\n") {
+                        inLineComment = false;
+                        out += ch;
+                    }
+                    continue;
+                }
+                if (inBlockComment) {
+                    if (ch === "*" && next === "/") {
+                        inBlockComment = false;
+                        i++;
+                    }
+                    continue;
+                }
+
+                if (!inDouble && !inSingle && ch === "/" && next === "/") {
+                    inLineComment = true;
+                    i++;
+                    continue;
+                }
+                if (!inDouble && !inSingle && ch === "/" && next === "*") {
+                    inBlockComment = true;
+                    i++;
+                    continue;
+                }
+
+                if (ch === "\"" && !inSingle) {
+                    var escaped = i > 0 && content.charAt(i - 1) === "\\";
+                    if (!escaped) {
+                        inDouble = !inDouble;
+                    }
+                } else if (ch === "'" && !inDouble) {
+                    var escapedSingle = i > 0 && content.charAt(i - 1) === "\\";
+                    if (!escapedSingle) {
+                        inSingle = !inSingle;
                     }
                 }
-                throw new Error(buildJsonErrorMessage(errorInfo, false));
+                out += ch;
             }
+            return out;
+        }
+
+        function replaceOutsideStrings(content, replacer) {
+            var out = "";
+            var chunk = "";
+            var mode = "normal";
+
+            for (var i = 0; i < content.length; i++) {
+                var ch = content.charAt(i);
+                if (mode === "normal") {
+                    if (ch === "\"" || ch === "'") {
+                        out += replacer(chunk);
+                        chunk = "";
+                        out += ch;
+                        mode = ch === "\"" ? "double" : "single";
+                    } else {
+                        chunk += ch;
+                    }
+                } else {
+                    out += ch;
+                    if (ch === "\\") {
+                        i++;
+                        if (i < content.length) {
+                            out += content.charAt(i);
+                        }
+                        continue;
+                    }
+                    if ((mode === "double" && ch === "\"") || (mode === "single" && ch === "'")) {
+                        mode = "normal";
+                    }
+                }
+            }
+            out += replacer(chunk);
+            return out;
+        }
+
+        function normalizeCommonLiterals(content) {
+            return replaceOutsideStrings(content, function (segment) {
+                var normalized = segment
+                    .replace(/\bTrue\b/g, "true")
+                    .replace(/\bFalse\b/g, "false")
+                    .replace(/\bNone\b/g, "null")
+                    .replace(/\bundefined\b/g, "null")
+                    .replace(/\bNaN\b/g, "null");
+
+                normalized = normalized.replace(/(:\s*)([A-Za-z_\u4e00-\u9fa5$][\w\-\u4e00-\u9fa5$]*)(\s*[,}\]])/g, function (m, p1, p2, p3) {
+                    if (/^(true|false|null)$/i.test(p2)) {
+                        return p1 + p2.toLowerCase() + p3;
+                    }
+                    return p1 + "\"" + p2 + "\"" + p3;
+                });
+                return normalized;
+            });
+        }
+
+        function addMissingCommas(content) {
+            return replaceOutsideStrings(content, function (segment) {
+                return segment
+                    .replace(/([}\]"0-9a-zA-Z])(\s*\n\s*)(?=(["{\[]|[A-Za-z_\u4e00-\u9fa5$][\w\-\u4e00-\u9fa5$]*\s*:))/g, "$1,$2")
+                    .replace(/([}\]"0-9a-zA-Z])(\s{2,})(?=(["{\[]))/g, "$1,$2");
+            });
+        }
+
+        function removeTrailingCommas(content) {
+            return replaceOutsideStrings(content, function (segment) {
+                return segment.replace(/,\s*([}\]])/g, "$1");
+            });
+        }
+
+        function balanceJsonBrackets(content) {
+            var out = "";
+            var stack = [];
+            var mode = "normal";
+
+            for (var i = 0; i < content.length; i++) {
+                var ch = content.charAt(i);
+                if (mode === "normal") {
+                    if (ch === "\"" || ch === "'") {
+                        mode = ch === "\"" ? "double" : "single";
+                        out += ch;
+                        continue;
+                    }
+                    if (ch === "{" || ch === "[") {
+                        stack.push(ch);
+                        out += ch;
+                        continue;
+                    }
+                    if (ch === "}" || ch === "]") {
+                        if (stack.length === 0) {
+                            continue;
+                        }
+                        var top = stack[stack.length - 1];
+                        if ((top === "{" && ch === "}") || (top === "[" && ch === "]")) {
+                            stack.pop();
+                            out += ch;
+                            continue;
+                        }
+                        continue;
+                    }
+                    out += ch;
+                    continue;
+                }
+
+                out += ch;
+                if (ch === "\\") {
+                    i++;
+                    if (i < content.length) {
+                        out += content.charAt(i);
+                    }
+                    continue;
+                }
+                if ((mode === "double" && ch === "\"") || (mode === "single" && ch === "'")) {
+                    mode = "normal";
+                }
+            }
+
+            while (stack.length > 0) {
+                var left = stack.pop();
+                out += left === "{" ? "}" : "]";
+            }
+            return out;
+        }
+
+        function quoteUnquotedKeys(content) {
+            return content.replace(/([{,]\s*)([A-Za-z_\u4e00-\u9fa5$][\w\-\u4e00-\u9fa5$]*)(\s*:)/g, "$1\"$2\"$3");
+        }
+
+        function convertSingleQuotedStrings(content) {
+            return content.replace(/'([^'\\]*(?:\\.[^'\\]*)*)'/g, function (_, body) {
+                var unescaped = body.replace(/\\'/g, "'");
+                var escaped = unescaped.replace(/"/g, "\\\"");
+                return "\"" + escaped + "\"";
+            });
+        }
+
+        function mergeChangeList(listA, listB) {
+            var map = {};
+            var merged = [];
+            var all = (listA || []).concat(listB || []);
+            for (var i = 0; i < all.length; i++) {
+                if (!map[all[i]]) {
+                    map[all[i]] = true;
+                    merged.push(all[i]);
+                }
+            }
+            return merged;
         }
 
         function getJsonErrorInfo(content, error) {
@@ -353,12 +656,14 @@
             return lineText + "\n" + pointer;
         }
 
-        function buildJsonErrorMessage(errorInfo, isAutoFixedRetry) {
+        function buildJsonErrorMessage(errorInfo, isAutoFixedRetry, appliedChanges) {
             var prefix = isAutoFixedRetry ? "JSON 自动修正后仍有错误" : "JSON 格式错误";
+            var changeText = appliedChanges && appliedChanges.length ? " 已尝试：" + appliedChanges.join("、") + "。" : "";
+            var detail = errorInfo.rawMessage ? " 原始错误：" + errorInfo.rawMessage.replace(/\s+/g, " ") : "";
             if (errorInfo.line > 0) {
-                return prefix + "，第 " + errorInfo.line + " 行第 " + errorInfo.column + " 列附近有问题。";
+                return prefix + "，第 " + errorInfo.line + " 行第 " + errorInfo.column + " 列附近有问题。" + changeText + detail;
             }
-            return prefix + "，但暂时无法定位具体行列。";
+            return prefix + "，但暂时无法定位具体行列。" + changeText + detail;
         }
 
         function highlightJsonErrorPosition(errorInfo) {
@@ -374,10 +679,7 @@
                 sourceText.focus();
                 sourceText.setSelectionRange(caretStart, caretEnd);
             }
-        }
-
-        function autoFixMissingQuotedKeys(content) {
-            return content.replace(/([{,]\s*)([A-Za-z_\u4e00-\u9fa5$][\w\-\u4e00-\u9fa5$]*)(\s*:)/g, '$1"$2"$3');
+            sourceText.style.borderColor = "#ef4444";
         }
 
         function formatXml(xmlString) {
@@ -589,6 +891,7 @@
         function clearStatus() {
             errorText.style.color = "#ff5722";
             errorText.textContent = "";
+            sourceText.style.borderColor = "";
         }
 
         function locateFirst() {
