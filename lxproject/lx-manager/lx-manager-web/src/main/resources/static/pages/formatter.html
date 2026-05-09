@@ -9,6 +9,7 @@
         :root {
             --bg-main: #f6f8fb;
             --bg-accent: rgba(34, 136, 255, 0.08);
+            --bg-accent-2: rgba(99, 102, 241, 0.08);
             --card-shadow: 0 10px 26px rgba(15, 23, 42, 0.1);
             --card-shadow-hover: 0 16px 34px rgba(15, 23, 42, 0.14);
             --ring: rgba(30, 128, 255, 0.16);
@@ -17,25 +18,78 @@
             --panel-border-hover: #dbe5f5;
             --primary: #1e80ff;
             --primary-dark: #1769d1;
+            --border: #e5e7eb;
+            --card-bg: #ffffff;
+            --card-border: #e5e7eb;
+            --title-color: #1f2d3d;
+            --label-color: #666;
+            --result-border: #e6e6e6;
+            --result-bg: #1e1f22;
+            --result-fg: #f8f8f2;
+            --result-hover-border: #374151;
+            --result-hover-shadow: 0 8px 18px rgba(2, 6, 23, 0.26);
+            --fold-branch: #374151;
+            --fold-summary: #8cc5ff;
+            --fold-summary-hover: #bfdbfe;
+            --fold-line: #f8f8f2;
+            --fold-key: #8cc5ff;
+            --fold-value: #ffec99;
+            --error-color: #ff5722;
+            --scroll-thumb: rgba(148, 163, 184, 0.45);
+            --scroll-thumb-hover: rgba(148, 163, 184, 0.68);
+        }
+
+        [data-theme="dark"] {
+            --bg-main: #0b1220;
+            --bg-accent: rgba(47, 109, 255, 0.16);
+            --bg-accent-2: rgba(93, 108, 255, 0.14);
+            --card-shadow: 0 10px 34px rgba(0, 0, 0, 0.36);
+            --card-shadow-hover: 0 16px 44px rgba(0, 0, 0, 0.44);
+            --ring: rgba(94, 162, 255, 0.28);
+            --panel-bg: #0f1a2e;
+            --panel-border: #24324a;
+            --panel-border-hover: #335073;
+            --primary: #5ea2ff;
+            --primary-dark: #3f87f0;
+            --border: #2a3950;
+            --card-bg: #111a2c;
+            --card-border: #2a3950;
+            --title-color: #e6edf7;
+            --label-color: #9fb0c8;
+            --result-border: #2d3a52;
+            --result-bg: #0a0f1d;
+            --result-fg: #d9e5ff;
+            --result-hover-border: #46618a;
+            --result-hover-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            --fold-branch: #3c4e6f;
+            --fold-summary: #8fc1ff;
+            --fold-summary-hover: #b7d8ff;
+            --fold-line: #d7e2f7;
+            --fold-key: #9bc7ff;
+            --fold-value: #ffe59c;
+            --error-color: #ff7e7e;
+            --scroll-thumb: rgba(148, 163, 184, 0.52);
+            --scroll-thumb-hover: rgba(148, 163, 184, 0.74);
         }
 
         body {
             background:
                 radial-gradient(circle at 8% 8%, var(--bg-accent), transparent 30%),
-                radial-gradient(circle at 92% 92%, rgba(99, 102, 241, 0.08), transparent 36%),
+                radial-gradient(circle at 92% 92%, var(--bg-accent-2), transparent 36%),
                 var(--bg-main);
             padding: 24px;
             box-sizing: border-box;
             font-family: "Helvetica Neue", Arial, sans-serif;
+            color: var(--title-color);
         }
 
         .tool-card {
             max-width: 1100px;
             margin: 0 auto;
-            background: #fff;
+            background: var(--card-bg);
             border-radius: 14px;
             padding: 24px;
-            border: 1px solid #e5e7eb;
+            border: 1px solid var(--card-border);
             box-shadow: var(--card-shadow);
             transition: box-shadow 220ms ease, transform 220ms ease;
             animation: card-enter 320ms ease both;
@@ -50,7 +104,7 @@
             margin-bottom: 18px;
             font-size: 24px;
             font-weight: 600;
-            color: #1f2d3d;
+            color: var(--title-color);
         }
 
         .tool-row {
@@ -109,7 +163,7 @@
         }
 
         .panel-label {
-            color: #666;
+            color: var(--label-color);
             font-size: 13px;
             font-weight: 700;
             letter-spacing: 0.2px;
@@ -121,15 +175,28 @@
         select:focus {
             border-color: var(--primary) !important;
             box-shadow: 0 0 0 3px var(--ring);
-            background: #fcfdff;
+            background: var(--panel-bg);
+        }
+
+        .layui-input,
+        .layui-textarea,
+        .layui-form-select .layui-input {
+            background: var(--card);
+            color: var(--title-color);
+            border-color: var(--border, #e5e7eb);
+        }
+
+        .layui-form-label {
+            color: var(--label-color) !important;
+            font-weight: 600;
         }
 
         .result-box {
             margin-top: 14px;
-            border: 1px solid #e6e6e6;
+            border: 1px solid var(--result-border);
             border-radius: 4px;
-            background: #1e1f22;
-            color: #f8f8f2;
+            background: var(--result-bg);
+            color: var(--result-fg);
             min-height: 320px;
             max-height: 600px;
             overflow: auto;
@@ -142,8 +209,8 @@
         }
 
         .result-box:hover {
-            border-color: #374151;
-            box-shadow: 0 8px 18px rgba(2, 6, 23, 0.26);
+            border-color: var(--result-hover-border);
+            box-shadow: var(--result-hover-shadow);
         }
 
         .result-box.fold-mode {
@@ -154,7 +221,7 @@
         .fold-tree details {
             margin-left: 14px;
             padding-left: 4px;
-            border-left: 1px dashed #374151;
+            border-left: 1px dashed var(--fold-branch);
         }
 
         .fold-tree > details {
@@ -165,27 +232,27 @@
 
         .fold-tree summary {
             cursor: pointer;
-            color: #8cc5ff;
+            color: var(--fold-summary);
             margin: 4px 0;
             font-weight: 600;
             transition: color 150ms ease;
         }
 
         .fold-tree summary:hover {
-            color: #bfdbfe;
+            color: var(--fold-summary-hover);
         }
 
         .fold-tree .fold-line {
             margin: 4px 0 4px 16px;
-            color: #f8f8f2;
+            color: var(--fold-line);
         }
 
         .fold-tree .fold-key {
-            color: #8cc5ff;
+            color: var(--fold-key);
         }
 
         .fold-tree .fold-value {
-            color: #ffec99;
+            color: var(--fold-value);
         }
 
         .keyword-highlight {
@@ -211,7 +278,7 @@
         }
 
         .error-text {
-            color: #ff5722;
+            color: var(--error-color);
             margin-top: 6px;
             min-height: 22px;
         }
@@ -222,14 +289,14 @@
         }
 
         .result-box::-webkit-scrollbar-thumb {
-            background: rgba(148, 163, 184, 0.45);
+            background: var(--scroll-thumb);
             border-radius: 12px;
             border: 2px solid transparent;
             background-clip: content-box;
         }
 
         .result-box::-webkit-scrollbar-thumb:hover {
-            background: rgba(148, 163, 184, 0.68);
+            background: var(--scroll-thumb-hover);
             background-clip: content-box;
         }
 
@@ -282,6 +349,15 @@
         </div>
     </div>
     <div class="tool-row">
+        <label class="layui-form-label" style="width: 90px; padding-left: 0;">主题</label>
+        <div class="layui-input-inline" style="width: 180px;">
+            <select id="themeMode" class="layui-input">
+                <option value="light">浅色主题</option>
+                <option value="dark">深色主题</option>
+            </select>
+        </div>
+    </div>
+    <div class="tool-row">
         <label class="layui-form-label" style="width: 90px; padding-left: 0;">关键词</label>
         <div class="layui-input-block" style="margin-left: 100px;">
             <input id="keywordsInput" type="text" class="layui-input"
@@ -329,11 +405,13 @@
         var searchInput = document.getElementById("searchInput");
         var dataType = document.getElementById("dataType");
         var layoutMode = document.getElementById("layoutMode");
+        var themeMode = document.getElementById("themeMode");
         var layoutContainer = document.getElementById("layoutContainer");
         var foldBtn = document.getElementById("foldBtn");
         var errorText = document.getElementById("errorText");
         var searchMeta = document.getElementById("searchMeta");
         var layoutStorageKey = "formatter.layout.mode";
+        var themeStorageKey = "formatter.theme.mode";
         var lastFormattedText = "";
         var structuredData = null;
         var searchMatches = [];
@@ -342,8 +420,12 @@
         var currentViewMode = "text";
 
         initLayoutMode();
+        initThemeMode();
         layoutMode.addEventListener("change", function () {
             applyLayout(layoutMode.value);
+        });
+        themeMode.addEventListener("change", function () {
+            applyTheme(themeMode.value);
         });
         foldBtn.addEventListener("click", function () {
             toggleFoldView();
@@ -1423,6 +1505,26 @@
             layoutContainer.classList.add("layout-" + finalMode);
             try {
                 window.localStorage.setItem(layoutStorageKey, finalMode);
+            } catch (e) {}
+        }
+
+        function initThemeMode() {
+            var saved = "";
+            try {
+                saved = window.localStorage.getItem(themeStorageKey) || "";
+            } catch (e) {
+                saved = "";
+            }
+            var mode = saved === "dark" ? "dark" : "light";
+            themeMode.value = mode;
+            applyTheme(mode);
+        }
+
+        function applyTheme(mode) {
+            var finalMode = mode === "dark" ? "dark" : "light";
+            document.documentElement.setAttribute("data-theme", finalMode);
+            try {
+                window.localStorage.setItem(themeStorageKey, finalMode);
             } catch (e) {}
         }
 

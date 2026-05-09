@@ -7,6 +7,8 @@
   <style>
     :root {
       --bg: #f5f7fb;
+      --bg-spot-1: rgba(30, 128, 255, 0.08);
+      --bg-spot-2: rgba(99, 102, 241, 0.08);
       --card: #ffffff;
       --text: #1f2d3d;
       --muted: #667085;
@@ -20,6 +22,53 @@
       --ring: rgba(30, 128, 255, 0.16);
       --card-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
       --card-shadow-hover: 0 16px 40px rgba(15, 23, 42, 0.12);
+      --surface-soft: #fbfcff;
+      --surface-soft-border: #e9edf5;
+      --surface-soft-border-hover: #dbe5f5;
+      --result-border: #1f2937;
+      --result-hover-border: #374151;
+      --result-hover-shadow: 0 8px 18px rgba(2, 6, 23, 0.26);
+      --fold-branch: #374151;
+      --fold-summary: #93c5fd;
+      --fold-summary-hover: #bfdbfe;
+      --fold-line: #e5e7eb;
+      --fold-key: #93c5fd;
+      --fold-value: #fde68a;
+      --scroll-thumb: rgba(148, 163, 184, 0.45);
+      --scroll-thumb-hover: rgba(148, 163, 184, 0.68);
+    }
+
+    [data-theme="dark"] {
+      --bg: #0b1220;
+      --bg-spot-1: rgba(47, 109, 255, 0.16);
+      --bg-spot-2: rgba(93, 108, 255, 0.14);
+      --card: #111a2c;
+      --text: #e6edf7;
+      --muted: #9fb0c8;
+      --border: #2a3950;
+      --primary: #5ea2ff;
+      --primary-dark: #3f87f0;
+      --ok: #29c37f;
+      --error: #ff6b6b;
+      --code-bg: #0a0f1d;
+      --code-fg: #d9e5ff;
+      --ring: rgba(94, 162, 255, 0.28);
+      --card-shadow: 0 10px 34px rgba(0, 0, 0, 0.36);
+      --card-shadow-hover: 0 16px 44px rgba(0, 0, 0, 0.44);
+      --surface-soft: #0f1a2e;
+      --surface-soft-border: #24324a;
+      --surface-soft-border-hover: #335073;
+      --result-border: #2d3a52;
+      --result-hover-border: #46618a;
+      --result-hover-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+      --fold-branch: #3c4e6f;
+      --fold-summary: #8fc1ff;
+      --fold-summary-hover: #b7d8ff;
+      --fold-line: #d7e2f7;
+      --fold-key: #9bc7ff;
+      --fold-value: #ffe59c;
+      --scroll-thumb: rgba(148, 163, 184, 0.52);
+      --scroll-thumb-hover: rgba(148, 163, 184, 0.74);
     }
 
     * { box-sizing: border-box; }
@@ -27,8 +76,8 @@
     body {
       margin: 0;
       background:
-        radial-gradient(circle at 8% 8%, rgba(30, 128, 255, 0.08), transparent 30%),
-        radial-gradient(circle at 92% 92%, rgba(99, 102, 241, 0.08), transparent 36%),
+        radial-gradient(circle at 8% 8%, var(--bg-spot-1), transparent 30%),
+        radial-gradient(circle at 92% 92%, var(--bg-spot-2), transparent 36%),
         var(--bg);
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
@@ -81,7 +130,8 @@
       padding: 10px 12px;
       font-size: 14px;
       outline: none;
-      background: #fff;
+      background: var(--card);
+      color: var(--text);
       transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
     }
 
@@ -90,7 +140,7 @@
     textarea:focus {
       border-color: var(--primary);
       box-shadow: 0 0 0 3px var(--ring);
-      background: #fcfdff;
+      background: var(--surface-soft);
     }
 
     textarea {
@@ -124,8 +174,8 @@
     .layout-panel {
       flex: 1;
       min-width: 0;
-      background: #fbfcff;
-      border: 1px solid #e9edf5;
+      background: var(--surface-soft);
+      border: 1px solid var(--surface-soft-border);
       border-radius: 10px;
       padding: 12px;
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 4px 10px rgba(15, 23, 42, 0.04);
@@ -133,7 +183,7 @@
     }
 
     .layout-panel:hover {
-      border-color: #dbe5f5;
+      border-color: var(--surface-soft-border-hover);
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 8px 18px rgba(15, 23, 42, 0.07);
     }
 
@@ -150,15 +200,15 @@
       border-radius: 8px;
       padding: 8px 12px;
       cursor: pointer;
-      background: #fff;
-      color: #111827;
+      background: var(--card);
+      color: var(--text);
       transition: transform 140ms ease, box-shadow 180ms ease, background-color 180ms ease, border-color 180ms ease;
     }
 
     button:hover {
       transform: translateY(-1px);
       box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
-      border-color: #d6dbe6;
+      border-color: var(--surface-soft-border-hover);
     }
 
     button:active {
@@ -191,7 +241,7 @@
 
     .result-box {
       margin: 0;
-      border: 1px solid #1f2937;
+      border: 1px solid var(--result-border);
       border-radius: 10px;
       background: var(--code-bg);
       color: var(--code-fg);
@@ -208,8 +258,8 @@
     }
 
     .result-box:hover {
-      border-color: #374151;
-      box-shadow: 0 8px 18px rgba(2, 6, 23, 0.26);
+      border-color: var(--result-hover-border);
+      box-shadow: var(--result-hover-shadow);
     }
 
     .result-box.fold-mode {
@@ -220,7 +270,7 @@
     .fold-tree details {
       margin-left: 14px;
       padding-left: 4px;
-      border-left: 1px dashed #374151;
+      border-left: 1px dashed var(--fold-branch);
     }
 
     .fold-tree > details {
@@ -231,27 +281,27 @@
 
     .fold-tree summary {
       cursor: pointer;
-      color: #93c5fd;
+      color: var(--fold-summary);
       margin: 4px 0;
       font-weight: 600;
       transition: color 150ms ease;
     }
 
     .fold-tree summary:hover {
-      color: #bfdbfe;
+      color: var(--fold-summary-hover);
     }
 
     .fold-tree .fold-line {
       margin: 4px 0 4px 16px;
-      color: #e5e7eb;
+      color: var(--fold-line);
     }
 
     .fold-tree .fold-key {
-      color: #93c5fd;
+      color: var(--fold-key);
     }
 
     .fold-tree .fold-value {
-      color: #fde68a;
+      color: var(--fold-value);
     }
 
     .keyword-highlight {
@@ -282,14 +332,14 @@
     }
 
     .result-box::-webkit-scrollbar-thumb {
-      background: rgba(148, 163, 184, 0.45);
+      background: var(--scroll-thumb);
       border-radius: 12px;
       border: 2px solid transparent;
       background-clip: content-box;
     }
 
     .result-box::-webkit-scrollbar-thumb:hover {
-      background: rgba(148, 163, 184, 0.68);
+      background: var(--scroll-thumb-hover);
       background-clip: content-box;
     }
 
@@ -341,6 +391,14 @@
   </div>
 
   <div class="row">
+    <label for="themeMode">主题</label>
+    <select id="themeMode">
+      <option value="light">浅色主题</option>
+      <option value="dark">深色主题</option>
+    </select>
+  </div>
+
+  <div class="row">
     <label for="keywordsInput">关键词</label>
     <input id="keywordsInput" placeholder="多个关键词用空格或逗号分隔，如 name,id,status">
   </div>
@@ -383,12 +441,14 @@
     var searchInput = document.getElementById("searchInput");
     var dataType = document.getElementById("dataType");
     var layoutMode = document.getElementById("layoutMode");
+    var themeMode = document.getElementById("themeMode");
     var layoutContainer = document.getElementById("layoutContainer");
     var foldBtn = document.getElementById("foldBtn");
     var resultView = document.getElementById("resultView");
     var status = document.getElementById("status");
     var searchMeta = document.getElementById("searchMeta");
     var layoutStorageKey = "formatter.layout.mode";
+    var themeStorageKey = "formatter.theme.mode";
 
     var lastFormattedText = "";
     var structuredData = null;
@@ -398,8 +458,12 @@
     var currentViewMode = "text";
 
     initLayoutMode();
+    initThemeMode();
     layoutMode.addEventListener("change", function () {
       applyLayout(layoutMode.value);
+    });
+    themeMode.addEventListener("change", function () {
+      applyTheme(themeMode.value);
     });
     foldBtn.addEventListener("click", function () {
       toggleFoldView();
@@ -1452,6 +1516,26 @@
       layoutContainer.classList.add("layout-" + finalMode);
       try {
         window.localStorage.setItem(layoutStorageKey, finalMode);
+      } catch (e) {}
+    }
+
+    function initThemeMode() {
+      var saved = "";
+      try {
+        saved = window.localStorage.getItem(themeStorageKey) || "";
+      } catch (e) {
+        saved = "";
+      }
+      var mode = saved === "dark" ? "dark" : "light";
+      themeMode.value = mode;
+      applyTheme(mode);
+    }
+
+    function applyTheme(mode) {
+      var finalMode = mode === "dark" ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", finalMode);
+      try {
+        window.localStorage.setItem(themeStorageKey, finalMode);
       } catch (e) {}
     }
 
