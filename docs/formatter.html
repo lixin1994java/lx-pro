@@ -94,7 +94,9 @@
     }
 
     .container {
-      max-width: 1160px;
+      max-width: none;
+      width: calc(100vw - 24px);
+      min-height: calc(100vh - 24px);
       margin: 0 auto;
       background: var(--card);
       border: 1px solid var(--border);
@@ -152,18 +154,29 @@
       letter-spacing: 0.2px;
     }
 
-    .row {
-      margin-bottom: 12px;
+    .control-grid {
       display: grid;
-      grid-template-columns: 90px 1fr;
+      grid-template-columns: repeat(5, minmax(180px, 1fr));
       gap: 10px;
-      align-items: center;
+      margin-bottom: 12px;
+      padding: 10px;
+      border: 1px solid var(--surface-soft-border);
+      border-radius: 12px;
+      background: var(--surface-soft);
+    }
+
+    .control-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
     }
 
     label {
       color: var(--muted);
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
+      letter-spacing: 0.15px;
     }
 
     select,
@@ -442,6 +455,16 @@
       .layout-container.layout-horizontal {
         flex-direction: column;
       }
+
+      .control-grid {
+        grid-template-columns: repeat(2, minmax(180px, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      .control-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -458,38 +481,36 @@
 <div class="container">
   <h1>JSON / XML 格式化工具</h1>
 
-  <div class="row">
-    <label for="dataType">数据类型</label>
-    <select id="dataType">
-      <option value="json">JSON</option>
-      <option value="xml">XML</option>
-    </select>
-  </div>
-
-  <div class="row">
-    <label for="layoutMode">布局切换</label>
-    <select id="layoutMode">
-      <option value="vertical">上下布局</option>
-      <option value="horizontal">左右布局</option>
-    </select>
-  </div>
-
-  <div class="row">
-    <label for="themeMode">主题</label>
-    <select id="themeMode">
-      <option value="light">浅色主题</option>
-      <option value="dark">深色主题</option>
-    </select>
-  </div>
-
-  <div class="row">
-    <label for="keywordsInput">关键词</label>
-    <input id="keywordsInput" placeholder="多个关键词用空格或逗号分隔，如 name,id,status">
-  </div>
-
-  <div class="row">
-    <label for="searchInput">搜索定位</label>
-    <input id="searchInput" placeholder="输入要定位的词（Enter/F3/Shift+F3）">
+  <div class="control-grid">
+    <div class="control-item">
+      <label for="dataType">数据类型</label>
+      <select id="dataType">
+        <option value="json">JSON</option>
+        <option value="xml">XML</option>
+      </select>
+    </div>
+    <div class="control-item">
+      <label for="layoutMode">布局切换</label>
+      <select id="layoutMode">
+        <option value="vertical">上下布局</option>
+        <option value="horizontal">左右布局</option>
+      </select>
+    </div>
+    <div class="control-item">
+      <label for="themeMode">主题</label>
+      <select id="themeMode">
+        <option value="light">浅色主题</option>
+        <option value="dark">深色主题</option>
+      </select>
+    </div>
+    <div class="control-item">
+      <label for="keywordsInput">关键词</label>
+      <input id="keywordsInput" placeholder="多个关键词用空格或逗号分隔，如 name,id,status">
+    </div>
+    <div class="control-item">
+      <label for="searchInput">搜索定位</label>
+      <input id="searchInput" placeholder="输入要定位的词（Enter/F3/Shift+F3）">
+    </div>
   </div>
 
   <div class="actions">
