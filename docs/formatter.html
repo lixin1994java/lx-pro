@@ -40,6 +40,12 @@
       --panel-glow: linear-gradient(125deg, rgba(30, 128, 255, 0.08), rgba(99, 102, 241, 0.02));
       --btn-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
       --btn-shadow-hover: 0 8px 18px rgba(15, 23, 42, 0.14);
+      --toolbar-bg: rgba(248, 251, 255, 0.86);
+      --toolbar-border: #dbe6f5;
+      --toolbar-pill-bg: rgba(255, 255, 255, 0.78);
+      --select-glass: rgba(255, 255, 255, 0.68);
+      --select-glass-hover: rgba(255, 255, 255, 0.9);
+      --ripple-ink: rgba(255, 255, 255, 0.52);
     }
 
     [data-theme="dark"] {
@@ -77,6 +83,12 @@
       --panel-glow: linear-gradient(125deg, rgba(94, 162, 255, 0.14), rgba(99, 102, 241, 0.04));
       --btn-shadow: 0 4px 12px rgba(0, 0, 0, 0.24);
       --btn-shadow-hover: 0 10px 22px rgba(0, 0, 0, 0.35);
+      --toolbar-bg: rgba(15, 26, 46, 0.84);
+      --toolbar-border: #324867;
+      --toolbar-pill-bg: rgba(17, 31, 53, 0.72);
+      --select-glass: rgba(21, 37, 64, 0.64);
+      --select-glass-hover: rgba(28, 47, 78, 0.84);
+      --ripple-ink: rgba(191, 219, 254, 0.38);
     }
 
     * { box-sizing: border-box; }
@@ -193,6 +205,16 @@
       transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
     }
 
+    select {
+      background: var(--select-glass);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    select:hover {
+      background: var(--select-glass-hover);
+    }
+
     select:focus,
     input:focus,
     textarea:focus {
@@ -210,9 +232,42 @@
 
     .actions {
       margin: 12px 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+      padding: 10px;
+      border: 1px solid var(--toolbar-border);
+      border-radius: 12px;
+      background: var(--toolbar-bg);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .action-group {
+      position: relative;
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
+      align-items: center;
+      min-height: 58px;
+      padding: 12px 10px 10px;
+      border: 1px solid var(--toolbar-border);
+      border-radius: 10px;
+      background: var(--toolbar-pill-bg);
+    }
+
+    .action-group::before {
+      content: attr(data-group);
+      position: absolute;
+      top: -8px;
+      left: 10px;
+      padding: 0 6px;
+      font-size: 11px;
+      line-height: 1.2;
+      color: var(--muted);
+      letter-spacing: 0.2px;
+      background: var(--card);
+      border-radius: 999px;
     }
 
     .layout-container {
@@ -240,6 +295,8 @@
       transition: box-shadow 220ms ease, border-color 220ms ease, transform 220ms ease;
       position: relative;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
 
     .layout-panel:hover {
@@ -262,12 +319,30 @@
       opacity: 1;
     }
 
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+      min-height: 24px;
+    }
+
     .panel-label {
       color: var(--muted);
       font-size: 13px;
       font-weight: 700;
       letter-spacing: 0.2px;
-      margin-bottom: 8px;
+      margin-bottom: 0;
+    }
+
+    .panel-note {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     button {
@@ -326,6 +401,16 @@
       box-shadow: 0 10px 22px rgba(30, 128, 255, 0.32);
     }
 
+    .button-ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: var(--ripple-ink);
+      transform: translate(-50%, -50%) scale(0);
+      pointer-events: none;
+      animation: ripple-wave 540ms cubic-bezier(0.22, 1, 0.36, 1);
+      z-index: 0;
+    }
+
     .meta {
       min-height: 22px;
       margin-bottom: 8px;
@@ -335,6 +420,22 @@
 
     .meta.error { color: var(--error); }
     .meta.ok { color: var(--ok); }
+
+    .status-banner {
+      min-height: 22px;
+      margin: 0 0 8px;
+      font-size: 13px;
+      color: var(--muted);
+      padding: 0 2px;
+    }
+
+    .status-banner.error {
+      color: var(--error);
+    }
+
+    .status-banner.ok {
+      color: var(--ok);
+    }
 
     .result-box {
       margin: 0;
@@ -352,6 +453,7 @@
       font-size: 13px;
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
       transition: border-color 180ms ease, box-shadow 180ms ease;
+      flex: 1;
     }
 
     .result-box:hover {
@@ -440,6 +542,18 @@
       background-clip: content-box;
     }
 
+    #sourceText {
+      min-height: 320px;
+      flex: 1;
+    }
+
+    @keyframes ripple-wave {
+      to {
+        transform: translate(-50%, -50%) scale(16);
+        opacity: 0;
+      }
+    }
+
     @keyframes card-enter {
       from {
         opacity: 0;
@@ -464,6 +578,15 @@
     @media (max-width: 640px) {
       .control-grid {
         grid-template-columns: 1fr;
+      }
+
+      .actions {
+        grid-template-columns: 1fr;
+      }
+
+      .panel-head {
+        flex-direction: column;
+        align-items: flex-start;
       }
     }
 
@@ -514,26 +637,38 @@
   </div>
 
   <div class="actions">
-    <button id="formatBtn" class="primary">格式化并高亮</button>
-    <button id="foldBtn">折叠视图</button>
-    <button id="validateBtn">格式验证</button>
-    <button id="highlightBtn">仅重新高亮</button>
-    <button id="searchBtn">定位首个</button>
-    <button id="prevBtn">上一个</button>
-    <button id="nextBtn">下一个</button>
-    <button id="copyBtn">复制结果</button>
-    <button id="clearBtn">清空</button>
+    <div class="action-group" data-group="编辑">
+      <button id="formatBtn" class="primary btn-ripple">格式化并高亮</button>
+      <button id="validateBtn" class="btn-ripple">格式验证</button>
+      <button id="foldBtn" class="btn-ripple">折叠视图</button>
+    </div>
+    <div class="action-group" data-group="高亮与定位">
+      <button id="highlightBtn" class="btn-ripple">仅重新高亮</button>
+      <button id="searchBtn" class="btn-ripple">定位首个</button>
+      <button id="prevBtn" class="btn-ripple">上一个</button>
+      <button id="nextBtn" class="btn-ripple">下一个</button>
+    </div>
+    <div class="action-group" data-group="结果处理">
+      <button id="copyBtn" class="btn-ripple">复制结果</button>
+      <button id="clearBtn" class="btn-ripple">清空</button>
+    </div>
   </div>
+
+  <div id="status" class="status-banner"></div>
 
   <div id="layoutContainer" class="layout-container layout-vertical">
     <div class="layout-panel">
-      <div class="panel-label">原始内容</div>
+      <div class="panel-head">
+        <div class="panel-label">原始内容</div>
+        <div class="panel-note">输入区：支持粘贴与直接编辑</div>
+      </div>
       <textarea id="sourceText" placeholder="请输入 JSON 或 XML 字符串"></textarea>
     </div>
     <div class="layout-panel">
-      <div class="panel-label">结果预览</div>
-      <div id="status" class="meta"></div>
-      <div id="searchMeta" class="meta">快捷键：Ctrl/Cmd + Enter 格式化，F3 下一个，Shift + F3 上一个</div>
+      <div class="panel-head">
+        <div class="panel-label">结果预览</div>
+        <div id="searchMeta" class="panel-note">快捷键：Ctrl/Cmd+Enter、F3、Shift+F3</div>
+      </div>
       <div id="resultView" class="result-box"></div>
     </div>
   </div>
@@ -564,6 +699,7 @@
 
     initLayoutMode();
     initThemeMode();
+    initButtonRipples();
     layoutMode.addEventListener("change", function () {
       applyLayout(layoutMode.value);
     });
@@ -1580,19 +1716,19 @@
 
     function setStatus(message, isError) {
       status.textContent = message;
-      status.className = "meta " + (isError ? "error" : "ok");
+      status.className = "status-banner " + (isError ? "error" : "ok");
     }
 
     function clearStatus() {
       status.textContent = "";
-      status.className = "meta";
+      status.className = "status-banner";
       sourceText.style.borderColor = "";
     }
 
     function updateSearchMeta() {
       var word = (searchInput.value || "").trim();
       if (!word) {
-        searchMeta.textContent = "快捷键：Ctrl/Cmd + Enter 格式化，F3 下一个，Shift + F3 上一个";
+        searchMeta.textContent = "快捷键：Ctrl/Cmd+Enter、F3、Shift+F3";
         return;
       }
       if (searchMatches.length === 0) {
@@ -1668,6 +1804,28 @@
       } else {
         setStatus("复制失败，请手动复制。", true);
       }
+    }
+
+    function initButtonRipples() {
+      var buttons = document.querySelectorAll(".btn-ripple");
+      Array.prototype.forEach.call(buttons, function (button) {
+        button.addEventListener("click", function (event) {
+          var rect = button.getBoundingClientRect();
+          var x = event.clientX || event.clientX === 0 ? event.clientX - rect.left : rect.width / 2;
+          var y = event.clientY || event.clientY === 0 ? event.clientY - rect.top : rect.height / 2;
+          var size = Math.max(rect.width, rect.height) * 1.18;
+          var ripple = document.createElement("span");
+          ripple.className = "button-ripple";
+          ripple.style.width = size + "px";
+          ripple.style.height = size + "px";
+          ripple.style.left = x + "px";
+          ripple.style.top = y + "px";
+          button.appendChild(ripple);
+          ripple.addEventListener("animationend", function () {
+            ripple.remove();
+          });
+        });
+      });
     }
   })();
 </script>

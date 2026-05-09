@@ -41,6 +41,12 @@
             --panel-glow: linear-gradient(125deg, rgba(30, 128, 255, 0.08), rgba(99, 102, 241, 0.02));
             --btn-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
             --btn-shadow-hover: 0 8px 18px rgba(15, 23, 42, 0.14);
+            --toolbar-bg: rgba(248, 251, 255, 0.86);
+            --toolbar-border: #dbe6f5;
+            --toolbar-pill-bg: rgba(255, 255, 255, 0.78);
+            --select-glass: rgba(255, 255, 255, 0.68);
+            --select-glass-hover: rgba(255, 255, 255, 0.9);
+            --ripple-ink: rgba(255, 255, 255, 0.52);
         }
 
         [data-theme="dark"] {
@@ -78,6 +84,12 @@
             --panel-glow: linear-gradient(125deg, rgba(94, 162, 255, 0.14), rgba(99, 102, 241, 0.04));
             --btn-shadow: 0 4px 12px rgba(0, 0, 0, 0.24);
             --btn-shadow-hover: 0 10px 22px rgba(0, 0, 0, 0.35);
+            --toolbar-bg: rgba(15, 26, 46, 0.84);
+            --toolbar-border: #324867;
+            --toolbar-pill-bg: rgba(17, 31, 53, 0.72);
+            --select-glass: rgba(21, 37, 64, 0.64);
+            --select-glass-hover: rgba(28, 47, 78, 0.84);
+            --ripple-ink: rgba(191, 219, 254, 0.38);
         }
 
         body {
@@ -186,11 +198,47 @@
         .tool-actions {
             margin-top: 12px;
             margin-bottom: 12px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 10px;
+            padding: 10px;
+            border: 1px solid var(--toolbar-border);
+            border-radius: 12px;
+            background: var(--toolbar-bg);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .action-group {
+            position: relative;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            min-height: 58px;
+            padding: 12px 10px 10px;
+            border: 1px solid var(--toolbar-border);
+            border-radius: 10px;
+            background: var(--toolbar-pill-bg);
+        }
+
+        .action-group::before {
+            content: attr(data-group);
+            position: absolute;
+            top: -8px;
+            left: 10px;
+            padding: 0 6px;
+            font-size: 11px;
+            line-height: 1.2;
+            color: var(--label-color);
+            letter-spacing: 0.2px;
+            background: var(--card-bg);
+            border-radius: 999px;
         }
 
         .tool-actions .layui-btn {
-            margin-right: 10px;
-            margin-bottom: 10px;
+            margin-right: 0;
+            margin-bottom: 0;
             transition: transform 160ms ease, box-shadow 220ms ease, filter 220ms ease, border-color 220ms ease;
             box-shadow: var(--btn-shadow);
             position: relative;
@@ -252,6 +300,8 @@
             transition: box-shadow 220ms ease, border-color 220ms ease, transform 220ms ease;
             position: relative;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
         .layout-panel:hover {
@@ -279,7 +329,25 @@
             font-size: 13px;
             font-weight: 700;
             letter-spacing: 0.2px;
+            margin-bottom: 0;
+        }
+
+        .panel-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
             margin-bottom: 8px;
+            min-height: 24px;
+        }
+
+        .panel-note {
+            color: var(--label-color);
+            font-size: 12px;
+            line-height: 1.4;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .layui-input:focus,
@@ -298,13 +366,23 @@
             border-color: var(--border, #e5e7eb);
         }
 
+        .control-item select.layui-input {
+            background: var(--select-glass);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .control-item select.layui-input:hover {
+            background: var(--select-glass-hover);
+        }
+
         .layui-form-label {
             color: var(--label-color) !important;
             font-weight: 600;
         }
 
         .result-box {
-            margin-top: 14px;
+            margin-top: 0;
             border: 1px solid var(--result-border);
             border-radius: 4px;
             background: var(--result-bg);
@@ -318,6 +396,7 @@
             line-height: 1.6;
             font-family: Consolas, "Courier New", monospace;
             transition: border-color 180ms ease, box-shadow 180ms ease;
+            flex: 1;
         }
 
         .result-box:hover {
@@ -389,10 +468,20 @@
             box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
         }
 
-        .error-text {
-            color: var(--error-color);
-            margin-top: 6px;
+        .status-banner {
             min-height: 22px;
+            margin: 0 0 8px;
+            padding: 0 2px;
+            font-size: 13px;
+            color: var(--label-color);
+        }
+
+        .status-banner.error {
+            color: var(--error-color);
+        }
+
+        .status-banner.ok {
+            color: #16b777;
         }
 
         .result-box::-webkit-scrollbar {
@@ -410,6 +499,28 @@
         .result-box::-webkit-scrollbar-thumb:hover {
             background: var(--scroll-thumb-hover);
             background-clip: content-box;
+        }
+
+        #sourceText {
+            min-height: 320px !important;
+            flex: 1;
+        }
+
+        .btn-ripple-wave {
+            position: absolute;
+            border-radius: 50%;
+            background: var(--ripple-ink);
+            transform: translate(-50%, -50%) scale(0);
+            pointer-events: none;
+            animation: ripple-wave 540ms cubic-bezier(0.22, 1, 0.36, 1);
+            z-index: 0;
+        }
+
+        @keyframes ripple-wave {
+            to {
+                transform: translate(-50%, -50%) scale(16);
+                opacity: 0;
+            }
         }
 
         @keyframes card-enter {
@@ -436,6 +547,15 @@
         @media (max-width: 640px) {
             .control-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .tool-actions {
+                grid-template-columns: 1fr;
+            }
+
+            .panel-head {
+                flex-direction: column;
+                align-items: flex-start;
             }
         }
 
@@ -486,26 +606,36 @@
         </div>
     </div>
     <div class="tool-actions">
-        <button id="formatBtn" class="layui-btn">格式化并高亮</button>
-        <button id="foldBtn" class="layui-btn">折叠视图</button>
-        <button id="validateBtn" class="layui-btn">格式验证</button>
-        <button id="highlightBtn" class="layui-btn layui-btn-normal">仅重新高亮</button>
-        <button id="searchBtn" class="layui-btn layui-btn-primary">定位首个</button>
-        <button id="prevBtn" class="layui-btn layui-btn-primary">上一个</button>
-        <button id="nextBtn" class="layui-btn layui-btn-primary">下一个</button>
-        <button id="copyBtn" class="layui-btn layui-btn-warm">复制结果</button>
-        <button id="clearBtn" class="layui-btn layui-btn-primary">清空</button>
+        <div class="action-group" data-group="编辑">
+            <button id="formatBtn" class="layui-btn btn-ripple">格式化并高亮</button>
+            <button id="validateBtn" class="layui-btn btn-ripple">格式验证</button>
+            <button id="foldBtn" class="layui-btn btn-ripple">折叠视图</button>
+        </div>
+        <div class="action-group" data-group="高亮与定位">
+            <button id="highlightBtn" class="layui-btn layui-btn-normal btn-ripple">仅重新高亮</button>
+            <button id="searchBtn" class="layui-btn layui-btn-primary btn-ripple">定位首个</button>
+            <button id="prevBtn" class="layui-btn layui-btn-primary btn-ripple">上一个</button>
+            <button id="nextBtn" class="layui-btn layui-btn-primary btn-ripple">下一个</button>
+        </div>
+        <div class="action-group" data-group="结果处理">
+            <button id="copyBtn" class="layui-btn layui-btn-warm btn-ripple">复制结果</button>
+            <button id="clearBtn" class="layui-btn layui-btn-primary btn-ripple">清空</button>
+        </div>
     </div>
+    <div id="errorText" class="status-banner"></div>
     <div id="layoutContainer" class="layout-container layout-vertical">
         <div class="layout-panel">
-            <div class="panel-label">原始内容</div>
-            <textarea id="sourceText" class="layui-textarea" style="min-height: 220px;"
-                      placeholder="请输入 JSON 或 XML 字符串"></textarea>
+            <div class="panel-head">
+                <div class="panel-label">原始内容</div>
+                <div class="panel-note">输入区：支持粘贴与直接编辑</div>
+            </div>
+            <textarea id="sourceText" class="layui-textarea" placeholder="请输入 JSON 或 XML 字符串"></textarea>
         </div>
         <div class="layout-panel">
-            <div class="panel-label">结果预览</div>
-            <div id="errorText" class="error-text"></div>
-            <div id="searchMeta" style="margin-bottom: 8px; color: #666;"></div>
+            <div class="panel-head">
+                <div class="panel-label">结果预览</div>
+                <div id="searchMeta" class="panel-note">快捷键：Ctrl/Cmd+Enter、F3、Shift+F3</div>
+            </div>
             <div id="resultView" class="result-box"></div>
         </div>
     </div>
@@ -535,6 +665,7 @@
 
         initLayoutMode();
         initThemeMode();
+        initButtonRipples();
         layoutMode.addEventListener("change", function () {
             applyLayout(layoutMode.value);
         });
@@ -662,7 +793,7 @@
             lastSearchWord = "";
             currentViewMode = "text";
             foldBtn.textContent = "折叠视图";
-            searchMeta.textContent = "";
+            updateSearchMeta();
             resultView.textContent = "";
             resultView.classList.remove("fold-mode");
         });
@@ -1517,13 +1648,13 @@
         }
 
         function showStatus(message, isError) {
-            errorText.style.color = isError ? "#ff5722" : "#16b777";
             errorText.textContent = message;
+            errorText.className = "status-banner " + (isError ? "error" : "ok");
         }
 
         function clearStatus() {
-            errorText.style.color = "#ff5722";
             errorText.textContent = "";
+            errorText.className = "status-banner";
             sourceText.style.borderColor = "";
         }
 
@@ -1590,7 +1721,7 @@
 
         function updateSearchMeta() {
             if ((searchInput.value || "").trim() === "") {
-                searchMeta.textContent = "快捷键：Ctrl/Cmd + Enter 格式化，F3 下一个，Shift + F3 上一个";
+                searchMeta.textContent = "快捷键：Ctrl/Cmd+Enter、F3、Shift+F3";
                 return;
             }
             if (searchMatches.length === 0) {
@@ -1650,6 +1781,28 @@
             if (node && typeof node.scrollIntoView === "function") {
                 node.scrollIntoView({behavior: "smooth", block: "center"});
             }
+        }
+
+        function initButtonRipples() {
+            var buttons = document.querySelectorAll(".btn-ripple");
+            Array.prototype.forEach.call(buttons, function (button) {
+                button.addEventListener("click", function (event) {
+                    var rect = button.getBoundingClientRect();
+                    var x = event.clientX || event.clientX === 0 ? event.clientX - rect.left : rect.width / 2;
+                    var y = event.clientY || event.clientY === 0 ? event.clientY - rect.top : rect.height / 2;
+                    var size = Math.max(rect.width, rect.height) * 1.18;
+                    var ripple = document.createElement("span");
+                    ripple.className = "btn-ripple-wave";
+                    ripple.style.width = size + "px";
+                    ripple.style.height = size + "px";
+                    ripple.style.left = x + "px";
+                    ripple.style.top = y + "px";
+                    button.appendChild(ripple);
+                    ripple.addEventListener("animationend", function () {
+                        ripple.remove();
+                    });
+                });
+            });
         }
 
         updateSearchMeta();
