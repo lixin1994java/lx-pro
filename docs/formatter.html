@@ -160,21 +160,39 @@
       left: 125%;
     }
 
-    h1 {
+    .title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
       margin: 0 0 16px;
+    }
+
+    h1 {
+      margin: 0;
       font-size: 24px;
       letter-spacing: 0.2px;
     }
 
     .control-grid {
       display: grid;
-      grid-template-columns: repeat(5, minmax(180px, 1fr));
+      grid-template-columns: repeat(4, minmax(180px, 1fr));
       gap: 10px;
       margin-bottom: 12px;
       padding: 10px;
       border: 1px solid var(--surface-soft-border);
       border-radius: 12px;
       background: var(--surface-soft);
+    }
+
+    .visit-stat {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 6px 10px;
+      border: 1px solid var(--surface-soft-border);
+      border-radius: 999px;
+      background: var(--surface-soft);
+      white-space: nowrap;
     }
 
     .control-item {
@@ -580,6 +598,11 @@
         grid-template-columns: 1fr;
       }
 
+      .title-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
       .actions {
         grid-template-columns: 1fr;
       }
@@ -602,7 +625,10 @@
 </head>
 <body>
 <div class="container">
-  <h1>JSON / XML 格式化工具</h1>
+  <div class="title-row">
+    <h1>JSON / XML 格式化工具</h1>
+    <div id="visitStat" class="visit-stat">访问次数：--</div>
+  </div>
 
   <div class="control-grid">
     <div class="control-item">
@@ -627,12 +653,8 @@
       </select>
     </div>
     <div class="control-item">
-      <label for="keywordsInput">关键词</label>
-      <input id="keywordsInput" placeholder="多个关键词用空格或逗号分隔，如 name,id,status">
-    </div>
-    <div class="control-item">
-      <label for="searchInput">搜索定位</label>
-      <input id="searchInput" placeholder="输入要定位的词（Enter/F3/Shift+F3）">
+      <label for="searchInput">高亮 / 定位</label>
+      <input id="searchInput" placeholder="输入词用于高亮与定位，可多个（空格/逗号）；定位默认第1个词">
     </div>
   </div>
 
@@ -677,7 +699,6 @@
 <script>
   (function () {
     var sourceText = document.getElementById("sourceText");
-    var keywordsInput = document.getElementById("keywordsInput");
     var searchInput = document.getElementById("searchInput");
     var dataType = document.getElementById("dataType");
     var layoutMode = document.getElementById("layoutMode");
@@ -687,8 +708,10 @@
     var resultView = document.getElementById("resultView");
     var status = document.getElementById("status");
     var searchMeta = document.getElementById("searchMeta");
+    var visitStat = document.getElementById("visitStat");
     var layoutStorageKey = "formatter.layout.mode";
     var themeStorageKey = "formatter.theme.mode";
+    var visitStorageKey = "formatter.visit.count";
 
     var lastFormattedText = "";
     var structuredData = null;
@@ -699,6 +722,7 @@
 
     initLayoutMode();
     initThemeMode();
+    initVisitCount();
     initButtonRipples();
     layoutMode.addEventListener("change", function () {
       applyLayout(layoutMode.value);
@@ -814,7 +838,6 @@
 
     document.getElementById("clearBtn").addEventListener("click", function () {
       sourceText.value = "";
-      keywordsInput.value = "";
       searchInput.value = "";
       lastFormattedText = "";
       structuredData = null;
@@ -1382,7 +1405,8 @@
         renderFoldedResult();
         return;
       }
-      renderResult(lastFormattedText, keywordsInput.value, searchInput.value, resetSearchToFirst);
+      var queryRaw = searchInput.value;
+      renderResult(lastFormattedText, queryRaw, getPrimaryQueryWord(queryRaw), resetSearchToFirst);
     }
 
     function toggleFoldView() {
@@ -1538,6 +1562,11 @@
       return keywords;
     }
 
+    function getPrimaryQueryWord(raw) {
+      var keywords = parseKeywords(raw || "");
+      return keywords.length ? keywords[0] : "";
+    }
+
     function buildHighlightedHtml(text, keywords, searchWord, resetSearchToFirst) {
       var len = text.length;
       if (len === 0) {
@@ -1650,13 +1679,14 @@
         setStatus("折叠视图下请先切回文本视图再搜索定位。", true);
         return;
       }
-      var word = (searchInput.value || "").trim();
+      var queryRaw = searchInput.value || "";
+      var word = getPrimaryQueryWord(queryRaw);
       if (!word) {
-        setStatus("请输入要搜索定位的词。", true);
+        setStatus("请输入高亮/定位关键词。", true);
         return;
       }
       clearStatus();
-      renderResult(lastFormattedText, keywordsInput.value, word, true);
+      renderResult(lastFormattedText, queryRaw, word, true);
       if (searchMatches.length === 0) {
         setStatus("未找到匹配项。", true);
       }
@@ -1671,28 +1701,29 @@
         setStatus("折叠视图下请先切回文本视图再搜索定位。", true);
         return;
       }
-      var word = (searchInput.value || "").trim();
+      var queryRaw = searchInput.value || "";
+      var word = getPrimaryQueryWord(queryRaw);
       if (!word) {
-        setStatus("请输入要搜索定位的词。", true);
+        setStatus("请输入高亮/定位关键词。", true);
         return;
       }
 
       if (word !== lastSearchWord) {
-        renderResult(lastFormattedText, keywordsInput.value, word, true);
+        renderResult(lastFormattedText, queryRaw, word, true);
         if (searchMatches.length === 0) {
           setStatus("未找到匹配项。", true);
           return;
         }
         if (step < 0) {
           activeSearchIndex = searchMatches.length - 1;
-          renderResult(lastFormattedText, keywordsInput.value, word, false);
+          renderResult(lastFormattedText, queryRaw, word, false);
         }
         clearStatus();
         return;
       }
 
       if (searchMatches.length === 0) {
-        renderResult(lastFormattedText, keywordsInput.value, word, true);
+        renderResult(lastFormattedText, queryRaw, word, true);
         if (searchMatches.length === 0) {
           setStatus("未找到匹配项。", true);
           return;
@@ -1700,7 +1731,7 @@
       }
 
       activeSearchIndex = (activeSearchIndex + step + searchMatches.length) % searchMatches.length;
-      renderResult(lastFormattedText, keywordsInput.value, word, false);
+      renderResult(lastFormattedText, queryRaw, word, false);
       clearStatus();
     }
 
@@ -1726,16 +1757,32 @@
     }
 
     function updateSearchMeta() {
-      var word = (searchInput.value || "").trim();
+      var raw = searchInput.value || "";
+      var word = getPrimaryQueryWord(raw);
       if (!word) {
         searchMeta.textContent = "快捷键：Ctrl/Cmd+Enter、F3、Shift+F3";
         return;
       }
       if (searchMatches.length === 0) {
-        searchMeta.textContent = "匹配：0";
+        searchMeta.textContent = "匹配：0（定位词：" + word + "）";
         return;
       }
-      searchMeta.textContent = "匹配：" + (activeSearchIndex + 1) + " / " + searchMatches.length;
+      searchMeta.textContent = "匹配：" + (activeSearchIndex + 1) + " / " + searchMatches.length + "（定位词：" + word + "）";
+    }
+
+    function initVisitCount() {
+      if (!visitStat) {
+        return;
+      }
+      var count = 1;
+      try {
+        var saved = parseInt(window.localStorage.getItem(visitStorageKey) || "0", 10);
+        count = isNaN(saved) ? 1 : saved + 1;
+        window.localStorage.setItem(visitStorageKey, String(count));
+      } catch (e) {
+        count = 1;
+      }
+      visitStat.textContent = "访问次数：" + count + "（本设备）";
     }
 
     function initLayoutMode() {
