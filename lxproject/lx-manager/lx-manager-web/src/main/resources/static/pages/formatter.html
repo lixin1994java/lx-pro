@@ -37,6 +37,10 @@
             --error-color: #ff5722;
             --scroll-thumb: rgba(148, 163, 184, 0.45);
             --scroll-thumb-hover: rgba(148, 163, 184, 0.68);
+            --card-glow: linear-gradient(120deg, rgba(30, 128, 255, 0.16), rgba(99, 102, 241, 0.08), rgba(56, 189, 248, 0.12));
+            --panel-glow: linear-gradient(125deg, rgba(30, 128, 255, 0.08), rgba(99, 102, 241, 0.02));
+            --btn-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
+            --btn-shadow-hover: 0 8px 18px rgba(15, 23, 42, 0.14);
         }
 
         [data-theme="dark"] {
@@ -70,6 +74,10 @@
             --error-color: #ff7e7e;
             --scroll-thumb: rgba(148, 163, 184, 0.52);
             --scroll-thumb-hover: rgba(148, 163, 184, 0.74);
+            --card-glow: linear-gradient(120deg, rgba(94, 162, 255, 0.24), rgba(139, 92, 246, 0.16), rgba(34, 197, 94, 0.12));
+            --panel-glow: linear-gradient(125deg, rgba(94, 162, 255, 0.14), rgba(99, 102, 241, 0.04));
+            --btn-shadow: 0 4px 12px rgba(0, 0, 0, 0.24);
+            --btn-shadow-hover: 0 10px 22px rgba(0, 0, 0, 0.35);
         }
 
         body {
@@ -81,6 +89,7 @@
             box-sizing: border-box;
             font-family: "Helvetica Neue", Arial, sans-serif;
             color: var(--title-color);
+            background-attachment: fixed;
         }
 
         .tool-card {
@@ -93,11 +102,47 @@
             box-shadow: var(--card-shadow);
             transition: box-shadow 220ms ease, transform 220ms ease;
             animation: card-enter 320ms ease both;
+            position: relative;
+            overflow: hidden;
+            isolation: isolate;
         }
 
         .tool-card:hover {
             box-shadow: var(--card-shadow-hover);
             transform: translateY(-1px);
+        }
+
+        .tool-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: var(--card-glow);
+            opacity: 0;
+            transition: opacity 280ms ease;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .tool-card::after {
+            content: "";
+            position: absolute;
+            width: 40%;
+            height: 220%;
+            left: -55%;
+            top: -60%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+            transform: rotate(14deg);
+            transition: left 520ms ease;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .tool-card:hover::before {
+            opacity: 1;
+        }
+
+        .tool-card:hover::after {
+            left: 125%;
         }
 
         .tool-title {
@@ -119,12 +164,35 @@
         .tool-actions .layui-btn {
             margin-right: 10px;
             margin-bottom: 10px;
-            transition: transform 140ms ease, box-shadow 180ms ease, filter 180ms ease;
+            transition: transform 160ms ease, box-shadow 220ms ease, filter 220ms ease, border-color 220ms ease;
+            box-shadow: var(--btn-shadow);
+            position: relative;
+            overflow: hidden;
+            isolation: isolate;
+        }
+
+        .tool-actions .layui-btn::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -130%;
+            width: 80%;
+            height: 100%;
+            background: linear-gradient(110deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+            transform: skewX(-18deg);
+            transition: left 420ms ease;
+            pointer-events: none;
+            z-index: -1;
         }
 
         .tool-actions .layui-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 7px 16px rgba(15, 23, 42, 0.1);
+            transform: translateY(-2px);
+            box-shadow: var(--btn-shadow-hover);
+            border-color: var(--panel-border-hover);
+        }
+
+        .tool-actions .layui-btn:hover::before {
+            left: 145%;
         }
 
         .tool-actions .layui-btn:active {
@@ -154,12 +222,29 @@
             border-radius: 10px;
             padding: 12px;
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 4px 10px rgba(15, 23, 42, 0.04);
-            transition: box-shadow 180ms ease, border-color 180ms ease;
+            transition: box-shadow 220ms ease, border-color 220ms ease, transform 220ms ease;
+            position: relative;
+            overflow: hidden;
         }
 
         .layout-panel:hover {
             border-color: var(--panel-border-hover);
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 8px 18px rgba(15, 23, 42, 0.07);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 10px 22px rgba(15, 23, 42, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .layout-panel::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: var(--panel-glow);
+            opacity: 0;
+            transition: opacity 220ms ease;
+            pointer-events: none;
+        }
+
+        .layout-panel:hover::before {
+            opacity: 1;
         }
 
         .panel-label {
