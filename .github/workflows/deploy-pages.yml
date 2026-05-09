@@ -46,25 +46,27 @@ jobs:
             echo "Pages site is not ready (HTTP ${status})."
           fi
 
-      - name: Fail with setup guidance when Pages is disabled
+      - name: Show setup guidance when Pages is disabled
         if: steps.pages_check.outputs.status != '200' && env.PAGES_DEPLOY_TOKEN == ''
         run: |
-          echo "::error::GitHub Pages 尚未启用。请先到仓库 Settings > Pages，将 Source 设为 GitHub Actions。"
-          echo "::error::保存后回到 Actions 页面重试本工作流。"
-          echo "::error::如果你不方便手动开启，可创建 secret: PAGES_DEPLOY_TOKEN（PAT，至少需要 repo + pages 写权限）。"
-          exit 1
+          echo "::warning::GitHub Pages 尚未启用。请先到仓库 Settings > Pages，将 Source 设为 GitHub Actions。"
+          echo "::warning::保存后回到 Actions 页面重试本工作流。"
+          echo "::warning::如果你不方便手动开启，可创建 secret: PAGES_DEPLOY_TOKEN（PAT，至少需要 repo + pages 写权限）。"
 
       - name: Setup Pages
+        if: steps.pages_check.outputs.status == '200' || env.PAGES_DEPLOY_TOKEN != ''
         uses: actions/configure-pages@v5
         with:
           token: ${{ env.PAGES_DEPLOY_TOKEN != '' && env.PAGES_DEPLOY_TOKEN || github.token }}
           enablement: ${{ env.PAGES_DEPLOY_TOKEN != '' }}
 
       - name: Upload artifact
+        if: steps.pages_check.outputs.status == '200' || env.PAGES_DEPLOY_TOKEN != ''
         uses: actions/upload-pages-artifact@v3
         with:
           path: docs
 
       - name: Deploy to GitHub Pages
+        if: steps.pages_check.outputs.status == '200' || env.PAGES_DEPLOY_TOKEN != ''
         id: deployment
         uses: actions/deploy-pages@v4
