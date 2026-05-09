@@ -203,6 +203,7 @@
 
   <div class="actions">
     <button id="formatBtn" class="primary">格式化并高亮</button>
+    <button id="validateBtn">格式验证</button>
     <button id="highlightBtn">仅重新高亮</button>
     <button id="searchBtn">定位首个</button>
     <button id="prevBtn">上一个</button>
@@ -274,6 +275,44 @@
         if (dataType.value !== "json") {
           resultView.textContent = "";
         }
+      }
+    });
+
+    document.getElementById("validateBtn").addEventListener("click", function () {
+      clearStatus();
+      var content = sourceText.value;
+      if (!content || !content.trim()) {
+        setStatus("请输入要校验的内容。", true);
+        return;
+      }
+      if (dataType.value === "json") {
+        var parsed = tryParseJson(content);
+        if (parsed.ok) {
+          setStatus("JSON 格式校验通过。", false);
+          return;
+        }
+        var errorInfo = getJsonErrorInfo(content, parsed.error);
+        highlightJsonErrorPosition(errorInfo);
+        setStatus(buildJsonErrorMessage(errorInfo, false, []), true);
+        return;
+      }
+      if (dataType.value === "xml") {
+        var xmlCheck = validateXmlContent(content);
+        if (xmlCheck.ok) {
+          setStatus("XML 格式校验通过。", false);
+          return;
+        }
+        if (xmlCheck.preview) {
+          resultView.textContent = "错误定位：\n" + xmlCheck.preview;
+        }
+        if (xmlCheck.index >= 0 && typeof sourceText.setSelectionRange === "function") {
+          var start = Math.min(xmlCheck.index, sourceText.value.length);
+          var end = Math.min(start + 1, sourceText.value.length);
+          sourceText.focus();
+          sourceText.setSelectionRange(start, end);
+          sourceText.style.borderColor = "#ef4444";
+        }
+        setStatus(xmlCheck.message, true);
       }
     });
 
@@ -807,6 +846,40 @@
         }
       }
       return out.join("\n");
+    }
+
+    function validateXmlContent(content) {
+      var parser = new DOMParser();
+      var xmlDoc = parser.parseFromString(content, "application/xml");
+      var errNode = xmlDoc.getElementsByTagName("parsererror")[0];
+      if (!errNode) {
+        return { ok: true };
+      }
+      var rawMessage = ((errNode.textContent || "").replace(/\s+/g, " ")).trim();
+      var line = 0;
+      var column = 0;
+      var m = rawMessage.match(/line\s+(\d+).*column\s+(\d+)/i) ||
+              rawMessage.match(/Line Number\s+(\d+),\s*Column\s+(\d+)/i);
+      var index = -1;
+      var preview = "";
+      if (m) {
+        line = parseInt(m[1], 10);
+        column = parseInt(m[2], 10);
+        index = indexFromLineColumn(content, line, column);
+        preview = buildJsonErrorPreview(content, index);
+      }
+      var msg = line > 0
+        ? "XML 格式错误，第 " + line + " 行第 " + column + " 列附近有问题。"
+        : "XML 格式错误，请检查标签闭合与属性写法。";
+      if (rawMessage) {
+        msg += " 原始错误：" + rawMessage;
+      }
+      return {
+        ok: false,
+        message: msg,
+        index: index,
+        preview: preview
+      };
     }
 
     function renderResult(text, keywordRaw, searchWord, resetSearchToFirst) {
