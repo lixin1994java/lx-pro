@@ -93,7 +93,9 @@
         }
 
         .tool-card {
-            max-width: 1100px;
+            max-width: none;
+            width: calc(100vw - 24px);
+            min-height: calc(100vh - 24px);
             margin: 0 auto;
             background: var(--card-bg);
             border-radius: 14px;
@@ -154,6 +156,31 @@
 
         .tool-row {
             margin-bottom: 14px;
+        }
+
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(180px, 1fr));
+            gap: 10px;
+            margin-bottom: 12px;
+            padding: 10px;
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            background: var(--panel-bg);
+        }
+
+        .control-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .control-item label {
+            color: var(--label-color);
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.15px;
         }
 
         .tool-actions {
@@ -400,6 +427,16 @@
             .layout-container.layout-horizontal {
                 flex-direction: column;
             }
+
+            .control-grid {
+                grid-template-columns: repeat(2, minmax(180px, 1fr));
+            }
+        }
+
+        @media (max-width: 640px) {
+            .control-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -415,43 +452,35 @@
 <body>
 <div class="tool-card">
     <h1 class="tool-title">JSON / XML 格式化工具</h1>
-    <div class="tool-row">
-        <label class="layui-form-label" style="width: 90px; padding-left: 0;">数据类型</label>
-        <div class="layui-input-inline" style="width: 180px;">
+    <div class="control-grid">
+        <div class="control-item">
+            <label for="dataType">数据类型</label>
             <select id="dataType" class="layui-input">
                 <option value="json">JSON</option>
                 <option value="xml">XML</option>
             </select>
         </div>
-    </div>
-    <div class="tool-row">
-        <label class="layui-form-label" style="width: 90px; padding-left: 0;">布局切换</label>
-        <div class="layui-input-inline" style="width: 180px;">
+        <div class="control-item">
+            <label for="layoutMode">布局切换</label>
             <select id="layoutMode" class="layui-input">
                 <option value="vertical">上下布局</option>
                 <option value="horizontal">左右布局</option>
             </select>
         </div>
-    </div>
-    <div class="tool-row">
-        <label class="layui-form-label" style="width: 90px; padding-left: 0;">主题</label>
-        <div class="layui-input-inline" style="width: 180px;">
+        <div class="control-item">
+            <label for="themeMode">主题</label>
             <select id="themeMode" class="layui-input">
                 <option value="light">浅色主题</option>
                 <option value="dark">深色主题</option>
             </select>
         </div>
-    </div>
-    <div class="tool-row">
-        <label class="layui-form-label" style="width: 90px; padding-left: 0;">关键词</label>
-        <div class="layui-input-block" style="margin-left: 100px;">
+        <div class="control-item">
+            <label for="keywordsInput">关键词</label>
             <input id="keywordsInput" type="text" class="layui-input"
                    placeholder="多个关键词用空格或逗号分隔，例如：name,id,status">
         </div>
-    </div>
-    <div class="tool-row">
-        <label class="layui-form-label" style="width: 90px; padding-left: 0;">搜索定位</label>
-        <div class="layui-input-block" style="margin-left: 100px;">
+        <div class="control-item">
+            <label for="searchInput">搜索定位</label>
             <input id="searchInput" type="text" class="layui-input"
                    placeholder="输入要定位的词，支持上下一个跳转（Enter/F3）">
         </div>
