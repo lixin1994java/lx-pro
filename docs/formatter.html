@@ -81,6 +81,31 @@
       gap: 8px;
     }
 
+    .layout-container {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .layout-container.layout-vertical {
+      flex-direction: column;
+    }
+
+    .layout-container.layout-horizontal {
+      flex-direction: row;
+    }
+
+    .layout-panel {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .panel-label {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
     button {
       border: 1px solid var(--border);
       border-radius: 8px;
@@ -158,9 +183,12 @@
     </select>
   </div>
 
-  <div class="row" style="align-items: start;">
-    <label for="sourceText">原始内容</label>
-    <textarea id="sourceText" placeholder="请输入 JSON 或 XML 字符串"></textarea>
+  <div class="row">
+    <label for="layoutMode">布局切换</label>
+    <select id="layoutMode">
+      <option value="vertical">上下布局</option>
+      <option value="horizontal">左右布局</option>
+    </select>
   </div>
 
   <div class="row">
@@ -183,9 +211,18 @@
     <button id="clearBtn">清空</button>
   </div>
 
-  <div id="status" class="meta"></div>
-  <div id="searchMeta" class="meta">快捷键：Ctrl/Cmd + Enter 格式化，F3 下一个，Shift + F3 上一个</div>
-  <pre id="resultView"></pre>
+  <div id="layoutContainer" class="layout-container layout-vertical">
+    <div class="layout-panel">
+      <div class="panel-label">原始内容</div>
+      <textarea id="sourceText" placeholder="请输入 JSON 或 XML 字符串"></textarea>
+    </div>
+    <div class="layout-panel">
+      <div class="panel-label">结果预览</div>
+      <div id="status" class="meta"></div>
+      <div id="searchMeta" class="meta">快捷键：Ctrl/Cmd + Enter 格式化，F3 下一个，Shift + F3 上一个</div>
+      <pre id="resultView"></pre>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -194,14 +231,22 @@
     var keywordsInput = document.getElementById("keywordsInput");
     var searchInput = document.getElementById("searchInput");
     var dataType = document.getElementById("dataType");
+    var layoutMode = document.getElementById("layoutMode");
+    var layoutContainer = document.getElementById("layoutContainer");
     var resultView = document.getElementById("resultView");
     var status = document.getElementById("status");
     var searchMeta = document.getElementById("searchMeta");
+    var layoutStorageKey = "formatter.layout.mode";
 
     var lastFormattedText = "";
     var searchMatches = [];
     var activeSearchIndex = -1;
     var lastSearchWord = "";
+
+    initLayoutMode();
+    layoutMode.addEventListener("change", function () {
+      applyLayout(layoutMode.value);
+    });
 
     document.getElementById("formatBtn").addEventListener("click", function () {
       clearStatus();
@@ -984,6 +1029,28 @@
         return;
       }
       searchMeta.textContent = "匹配：" + (activeSearchIndex + 1) + " / " + searchMatches.length;
+    }
+
+    function initLayoutMode() {
+      var saved = "";
+      try {
+        saved = window.localStorage.getItem(layoutStorageKey) || "";
+      } catch (e) {
+        saved = "";
+      }
+      var mode = saved === "horizontal" ? "horizontal" : "vertical";
+      layoutMode.value = mode;
+      applyLayout(mode);
+    }
+
+    function applyLayout(mode) {
+      var finalMode = mode === "horizontal" ? "horizontal" : "vertical";
+      layoutContainer.classList.remove("layout-horizontal");
+      layoutContainer.classList.remove("layout-vertical");
+      layoutContainer.classList.add("layout-" + finalMode);
+      try {
+        window.localStorage.setItem(layoutStorageKey, finalMode);
+      } catch (e) {}
     }
 
     function copyText(text) {

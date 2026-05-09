@@ -43,6 +43,31 @@
             margin-bottom: 10px;
         }
 
+        .layout-container {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .layout-container.layout-vertical {
+            flex-direction: column;
+        }
+
+        .layout-container.layout-horizontal {
+            flex-direction: row;
+        }
+
+        .layout-panel {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .panel-label {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
         .result-box {
             margin-top: 14px;
             border: 1px solid #e6e6e6;
@@ -101,10 +126,12 @@
         </div>
     </div>
     <div class="tool-row">
-        <label class="layui-form-label" style="width: 90px; padding-left: 0;">原始内容</label>
-        <div class="layui-input-block" style="margin-left: 100px;">
-            <textarea id="sourceText" class="layui-textarea" style="min-height: 220px;"
-                      placeholder="请输入 JSON 或 XML 字符串"></textarea>
+        <label class="layui-form-label" style="width: 90px; padding-left: 0;">布局切换</label>
+        <div class="layui-input-inline" style="width: 180px;">
+            <select id="layoutMode" class="layui-input">
+                <option value="vertical">上下布局</option>
+                <option value="horizontal">左右布局</option>
+            </select>
         </div>
     </div>
     <div class="tool-row">
@@ -130,9 +157,19 @@
         <button id="copyBtn" class="layui-btn layui-btn-warm">复制结果</button>
         <button id="clearBtn" class="layui-btn layui-btn-primary">清空</button>
     </div>
-    <div id="errorText" class="error-text"></div>
-    <div id="searchMeta" style="margin-bottom: 8px; color: #666;"></div>
-    <pre id="resultView" class="result-box"></pre>
+    <div id="layoutContainer" class="layout-container layout-vertical">
+        <div class="layout-panel">
+            <div class="panel-label">原始内容</div>
+            <textarea id="sourceText" class="layui-textarea" style="min-height: 220px;"
+                      placeholder="请输入 JSON 或 XML 字符串"></textarea>
+        </div>
+        <div class="layout-panel">
+            <div class="panel-label">结果预览</div>
+            <div id="errorText" class="error-text"></div>
+            <div id="searchMeta" style="margin-bottom: 8px; color: #666;"></div>
+            <pre id="resultView" class="result-box"></pre>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -142,12 +179,20 @@
         var keywordsInput = document.getElementById("keywordsInput");
         var searchInput = document.getElementById("searchInput");
         var dataType = document.getElementById("dataType");
+        var layoutMode = document.getElementById("layoutMode");
+        var layoutContainer = document.getElementById("layoutContainer");
         var errorText = document.getElementById("errorText");
         var searchMeta = document.getElementById("searchMeta");
+        var layoutStorageKey = "formatter.layout.mode";
         var lastFormattedText = "";
         var searchMatches = [];
         var activeSearchIndex = -1;
         var lastSearchWord = "";
+
+        initLayoutMode();
+        layoutMode.addEventListener("change", function () {
+            applyLayout(layoutMode.value);
+        });
 
         document.getElementById("formatBtn").addEventListener("click", function () {
             clearStatus();
@@ -957,6 +1002,28 @@
                 return;
             }
             searchMeta.textContent = "匹配：" + (activeSearchIndex + 1) + " / " + searchMatches.length;
+        }
+
+        function initLayoutMode() {
+            var saved = "";
+            try {
+                saved = window.localStorage.getItem(layoutStorageKey) || "";
+            } catch (e) {
+                saved = "";
+            }
+            var mode = saved === "horizontal" ? "horizontal" : "vertical";
+            layoutMode.value = mode;
+            applyLayout(mode);
+        }
+
+        function applyLayout(mode) {
+            var finalMode = mode === "horizontal" ? "horizontal" : "vertical";
+            layoutContainer.classList.remove("layout-horizontal");
+            layoutContainer.classList.remove("layout-vertical");
+            layoutContainer.classList.add("layout-" + finalMode);
+            try {
+                window.localStorage.setItem(layoutStorageKey, finalMode);
+            } catch (e) {}
         }
 
         function scrollToActiveMatch() {
