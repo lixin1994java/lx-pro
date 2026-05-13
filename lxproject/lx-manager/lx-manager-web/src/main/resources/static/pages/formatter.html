@@ -102,12 +102,14 @@
             font-family: "Helvetica Neue", Arial, sans-serif;
             color: var(--title-color);
             background-attachment: fixed;
+            min-height: 100vh;
         }
 
         .tool-card {
             max-width: none;
             width: calc(100vw - 24px);
-            min-height: calc(100vh - 24px);
+            height: calc(100vh - 48px);
+            min-height: calc(100vh - 48px);
             margin: 0 auto;
             background: var(--card-bg);
             border-radius: 14px;
@@ -119,6 +121,9 @@
             position: relative;
             overflow: hidden;
             isolation: isolate;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
         }
 
         .tool-card:hover {
@@ -159,26 +164,94 @@
             left: 125%;
         }
 
-        .tool-title {
+        .title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
             margin-bottom: 18px;
+        }
+
+        .tool-title {
+            margin-bottom: 0;
             font-size: 24px;
             font-weight: 600;
             color: var(--title-color);
+        }
+
+        .visit-stat {
+            font-size: 12px;
+            color: var(--label-color);
+            padding: 6px 10px;
+            border: 1px solid var(--panel-border);
+            border-radius: 999px;
+            background: var(--panel-bg);
+            white-space: nowrap;
         }
 
         .tool-row {
             margin-bottom: 14px;
         }
 
-        .control-grid {
-            display: grid;
-            grid-template-columns: repeat(5, minmax(180px, 1fr));
-            gap: 10px;
+        .command-orbs {
+            margin-top: 6px;
             margin-bottom: 12px;
-            padding: 10px;
-            border: 1px solid var(--panel-border);
-            border-radius: 12px;
-            background: var(--panel-bg);
+            display: grid;
+            grid-template-columns: 1.15fr 1fr;
+            gap: 14px;
+            flex-shrink: 0;
+        }
+
+        .orb-panel {
+            position: relative;
+            padding: 14px 16px 14px;
+            border: 1px solid var(--toolbar-border);
+            background: var(--toolbar-bg);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+            overflow: hidden;
+        }
+
+        .orb-panel::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 8% 50%, rgba(255, 255, 255, 0.2), transparent 48%);
+            opacity: 0.55;
+            pointer-events: none;
+        }
+
+        .orb-panel.orb-left {
+            border-radius: 120px 24px 24px 120px;
+        }
+
+        .orb-panel.orb-right {
+            border-radius: 24px 120px 120px 24px;
+        }
+
+        .orb-head {
+            position: relative;
+            z-index: 1;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.35px;
+            text-transform: uppercase;
+            color: var(--label-color);
+            margin-bottom: 10px;
+        }
+
+        .orb-fields {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(140px, 1fr));
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .orb-fields.search-zone {
+            grid-template-columns: 1fr;
         }
 
         .control-item {
@@ -195,47 +268,15 @@
             letter-spacing: 0.15px;
         }
 
-        .tool-actions {
-            margin-top: 12px;
-            margin-bottom: 12px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 10px;
-            padding: 10px;
-            border: 1px solid var(--toolbar-border);
-            border-radius: 12px;
-            background: var(--toolbar-bg);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-        }
-
-        .action-group {
+        .orb-buttons {
             position: relative;
+            z-index: 1;
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
-            align-items: center;
-            min-height: 58px;
-            padding: 12px 10px 10px;
-            border: 1px solid var(--toolbar-border);
-            border-radius: 10px;
-            background: var(--toolbar-pill-bg);
         }
 
-        .action-group::before {
-            content: attr(data-group);
-            position: absolute;
-            top: -8px;
-            left: 10px;
-            padding: 0 6px;
-            font-size: 11px;
-            line-height: 1.2;
-            color: var(--label-color);
-            letter-spacing: 0.2px;
-            background: var(--card-bg);
-            border-radius: 999px;
-        }
-
+        .orb-buttons .layui-btn,
         .tool-actions .layui-btn {
             margin-right: 0;
             margin-bottom: 0;
@@ -246,6 +287,7 @@
             isolation: isolate;
         }
 
+        .orb-buttons .layui-btn::before,
         .tool-actions .layui-btn::before {
             content: "";
             position: absolute;
@@ -260,16 +302,19 @@
             z-index: -1;
         }
 
+        .orb-buttons .layui-btn:hover,
         .tool-actions .layui-btn:hover {
             transform: translateY(-2px);
             box-shadow: var(--btn-shadow-hover);
             border-color: var(--panel-border-hover);
         }
 
+        .orb-buttons .layui-btn:hover::before,
         .tool-actions .layui-btn:hover::before {
             left: 145%;
         }
 
+        .orb-buttons .layui-btn:active,
         .tool-actions .layui-btn:active {
             transform: translateY(0);
             box-shadow: 0 3px 8px rgba(15, 23, 42, 0.1);
@@ -279,6 +324,8 @@
             display: flex;
             gap: 12px;
             margin-top: 8px;
+            flex: 1;
+            min-height: 0;
         }
 
         .layout-container.layout-vertical {
@@ -292,6 +339,7 @@
         .layout-panel {
             flex: 1;
             min-width: 0;
+            min-height: 0;
             background: var(--panel-bg);
             border: 1px solid var(--panel-border);
             border-radius: 10px;
@@ -387,8 +435,8 @@
             border-radius: 4px;
             background: var(--result-bg);
             color: var(--result-fg);
-            min-height: 320px;
-            max-height: 600px;
+            min-height: 0;
+            max-height: none;
             overflow: auto;
             padding: 14px;
             white-space: pre-wrap;
@@ -397,6 +445,7 @@
             font-family: Consolas, "Courier New", monospace;
             transition: border-color 180ms ease, box-shadow 180ms ease;
             flex: 1;
+            height: 100%;
         }
 
         .result-box:hover {
@@ -502,8 +551,9 @@
         }
 
         #sourceText {
-            min-height: 320px !important;
+            min-height: 0 !important;
             flex: 1;
+            height: 100%;
         }
 
         .btn-ripple-wave {
@@ -539,17 +589,32 @@
                 flex-direction: column;
             }
 
-            .control-grid {
-                grid-template-columns: repeat(2, minmax(180px, 1fr));
+            .command-orbs {
+                grid-template-columns: 1fr;
+            }
+
+            .orb-panel.orb-left,
+            .orb-panel.orb-right {
+                border-radius: 22px;
+            }
+
+            .orb-fields {
+                grid-template-columns: repeat(2, minmax(140px, 1fr));
             }
         }
 
         @media (max-width: 640px) {
-            .control-grid {
+            .title-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .orb-fields {
                 grid-template-columns: 1fr;
             }
 
-            .tool-actions {
+            .orb-buttons {
+                display: grid;
                 grid-template-columns: 1fr;
             }
 
@@ -571,56 +636,61 @@
 </head>
 <body>
 <div class="tool-card">
-    <h1 class="tool-title">JSON / XML 格式化工具</h1>
-    <div class="control-grid">
-        <div class="control-item">
-            <label for="dataType">数据类型</label>
-            <select id="dataType" class="layui-input">
-                <option value="json">JSON</option>
-                <option value="xml">XML</option>
-            </select>
-        </div>
-        <div class="control-item">
-            <label for="layoutMode">布局切换</label>
-            <select id="layoutMode" class="layui-input">
-                <option value="vertical">上下布局</option>
-                <option value="horizontal">左右布局</option>
-            </select>
-        </div>
-        <div class="control-item">
-            <label for="themeMode">主题</label>
-            <select id="themeMode" class="layui-input">
-                <option value="light">浅色主题</option>
-                <option value="dark">深色主题</option>
-            </select>
-        </div>
-        <div class="control-item">
-            <label for="keywordsInput">关键词</label>
-            <input id="keywordsInput" type="text" class="layui-input"
-                   placeholder="多个关键词用空格或逗号分隔，例如：name,id,status">
-        </div>
-        <div class="control-item">
-            <label for="searchInput">搜索定位</label>
-            <input id="searchInput" type="text" class="layui-input"
-                   placeholder="输入要定位的词，支持上下一个跳转（Enter/F3）">
-        </div>
+    <div class="title-row">
+        <h1 class="tool-title">JSON / XML 格式化工具</h1>
+        <div id="visitStat" class="visit-stat">访问次数：--</div>
     </div>
-    <div class="tool-actions">
-        <div class="action-group" data-group="编辑">
-            <button id="formatBtn" class="layui-btn btn-ripple">格式化并高亮</button>
-            <button id="validateBtn" class="layui-btn btn-ripple">格式验证</button>
-            <button id="foldBtn" class="layui-btn btn-ripple">折叠视图</button>
-        </div>
-        <div class="action-group" data-group="高亮与定位">
-            <button id="highlightBtn" class="layui-btn layui-btn-normal btn-ripple">仅重新高亮</button>
-            <button id="searchBtn" class="layui-btn layui-btn-primary btn-ripple">定位首个</button>
-            <button id="prevBtn" class="layui-btn layui-btn-primary btn-ripple">上一个</button>
-            <button id="nextBtn" class="layui-btn layui-btn-primary btn-ripple">下一个</button>
-        </div>
-        <div class="action-group" data-group="结果处理">
-            <button id="copyBtn" class="layui-btn layui-btn-warm btn-ripple">复制结果</button>
-            <button id="clearBtn" class="layui-btn layui-btn-primary btn-ripple">清空</button>
-        </div>
+    <div class="command-orbs">
+        <section class="orb-panel orb-left">
+            <div class="orb-head">左舱：切换 / 编辑</div>
+            <div class="orb-fields">
+                <div class="control-item">
+                    <label for="dataType">数据类型</label>
+                    <select id="dataType" class="layui-input">
+                        <option value="json">JSON</option>
+                        <option value="xml">XML</option>
+                    </select>
+                </div>
+                <div class="control-item">
+                    <label for="layoutMode">布局切换</label>
+                    <select id="layoutMode" class="layui-input">
+                        <option value="vertical">上下布局</option>
+                        <option value="horizontal">左右布局</option>
+                    </select>
+                </div>
+                <div class="control-item">
+                    <label for="themeMode">主题</label>
+                    <select id="themeMode" class="layui-input">
+                        <option value="light">浅色主题</option>
+                        <option value="dark">深色主题</option>
+                    </select>
+                </div>
+            </div>
+            <div class="orb-buttons">
+                <button id="formatBtn" class="layui-btn btn-ripple">格式化并高亮</button>
+                <button id="validateBtn" class="layui-btn btn-ripple">格式验证</button>
+                <button id="foldBtn" class="layui-btn btn-ripple">折叠视图</button>
+                <button id="copyBtn" class="layui-btn layui-btn-warm btn-ripple">复制结果</button>
+                <button id="clearBtn" class="layui-btn layui-btn-primary btn-ripple">清空</button>
+            </div>
+        </section>
+
+        <section class="orb-panel orb-right">
+            <div class="orb-head">右舱：搜索 / 定位</div>
+            <div class="orb-fields search-zone">
+                <div class="control-item">
+                    <label for="searchInput">高亮 / 定位</label>
+                    <input id="searchInput" type="text" class="layui-input"
+                           placeholder="输入词用于高亮与定位，可多个（空格/逗号）；定位默认第1个词">
+                </div>
+            </div>
+            <div class="orb-buttons">
+                <button id="highlightBtn" class="layui-btn layui-btn-normal btn-ripple">仅重新高亮</button>
+                <button id="searchBtn" class="layui-btn layui-btn-primary btn-ripple">定位首个</button>
+                <button id="prevBtn" class="layui-btn layui-btn-primary btn-ripple">上一个</button>
+                <button id="nextBtn" class="layui-btn layui-btn-primary btn-ripple">下一个</button>
+            </div>
+        </section>
     </div>
     <div id="errorText" class="status-banner"></div>
     <div id="layoutContainer" class="layout-container layout-vertical">
@@ -645,7 +715,6 @@
     (function () {
         var resultView = document.getElementById("resultView");
         var sourceText = document.getElementById("sourceText");
-        var keywordsInput = document.getElementById("keywordsInput");
         var searchInput = document.getElementById("searchInput");
         var dataType = document.getElementById("dataType");
         var layoutMode = document.getElementById("layoutMode");
@@ -654,8 +723,10 @@
         var foldBtn = document.getElementById("foldBtn");
         var errorText = document.getElementById("errorText");
         var searchMeta = document.getElementById("searchMeta");
+        var visitStat = document.getElementById("visitStat");
         var layoutStorageKey = "formatter.layout.mode";
         var themeStorageKey = "formatter.theme.mode";
+        var visitStorageKey = "formatter.visit.count";
         var lastFormattedText = "";
         var structuredData = null;
         var searchMatches = [];
@@ -665,6 +736,7 @@
 
         initLayoutMode();
         initThemeMode();
+        initVisitCount();
         initButtonRipples();
         layoutMode.addEventListener("change", function () {
             applyLayout(layoutMode.value);
@@ -783,7 +855,6 @@
 
         document.getElementById("clearBtn").addEventListener("click", function () {
             sourceText.value = "";
-            keywordsInput.value = "";
             searchInput.value = "";
             clearStatus();
             lastFormattedText = "";
@@ -1358,7 +1429,8 @@
                 renderFoldedResult();
                 return;
             }
-            renderHighlightedResult(lastFormattedText, keywordsInput.value, searchInput.value, resetSearchToFirst);
+            var queryRaw = searchInput.value;
+            renderHighlightedResult(lastFormattedText, queryRaw, getPrimaryQueryWord(queryRaw), resetSearchToFirst);
         }
 
         function toggleFoldView() {
@@ -1514,6 +1586,11 @@
             return keywords;
         }
 
+        function getPrimaryQueryWord(raw) {
+            var keywords = parseKeywords(raw || "");
+            return keywords.length ? keywords[0] : "";
+        }
+
         function buildHighlightedHtml(text, keywords, searchWord, resetSearchToFirst) {
             var len = text.length;
             if (len === 0) {
@@ -1667,13 +1744,14 @@
                 showStatus("折叠视图下请先切回文本视图再搜索定位。", true);
                 return;
             }
-            var word = (searchInput.value || "").trim();
+            var queryRaw = searchInput.value || "";
+            var word = getPrimaryQueryWord(queryRaw);
             if (!word) {
-                showStatus("请输入要搜索定位的词。", true);
+                showStatus("请输入高亮/定位关键词。", true);
                 return;
             }
             clearStatus();
-            renderHighlightedResult(lastFormattedText, keywordsInput.value, word, true);
+            renderHighlightedResult(lastFormattedText, queryRaw, word, true);
             if (searchMatches.length === 0) {
                 showStatus("未找到匹配项。", true);
             }
@@ -1688,47 +1766,50 @@
                 showStatus("折叠视图下请先切回文本视图再搜索定位。", true);
                 return;
             }
-            var word = (searchInput.value || "").trim();
+            var queryRaw = searchInput.value || "";
+            var word = getPrimaryQueryWord(queryRaw);
             if (!word) {
-                showStatus("请输入要搜索定位的词。", true);
+                showStatus("请输入高亮/定位关键词。", true);
                 return;
             }
             if (word !== lastSearchWord) {
-                renderHighlightedResult(lastFormattedText, keywordsInput.value, word, true);
+                renderHighlightedResult(lastFormattedText, queryRaw, word, true);
                 if (searchMatches.length === 0) {
                     showStatus("未找到匹配项。", true);
                     return;
                 }
                 if (step < 0) {
                     activeSearchIndex = searchMatches.length - 1;
-                    renderHighlightedResult(lastFormattedText, keywordsInput.value, word, false);
+                    renderHighlightedResult(lastFormattedText, queryRaw, word, false);
                 }
                 clearStatus();
                 return;
             }
 
             if (searchMatches.length === 0) {
-                renderHighlightedResult(lastFormattedText, keywordsInput.value, word, true);
+                renderHighlightedResult(lastFormattedText, queryRaw, word, true);
                 if (searchMatches.length === 0) {
                     showStatus("未找到匹配项。", true);
                     return;
                 }
             }
             activeSearchIndex = (activeSearchIndex + step + searchMatches.length) % searchMatches.length;
-            renderHighlightedResult(lastFormattedText, keywordsInput.value, word, false);
+            renderHighlightedResult(lastFormattedText, queryRaw, word, false);
             clearStatus();
         }
 
         function updateSearchMeta() {
-            if ((searchInput.value || "").trim() === "") {
+            var raw = searchInput.value || "";
+            var word = getPrimaryQueryWord(raw);
+            if (!word) {
                 searchMeta.textContent = "快捷键：Ctrl/Cmd+Enter、F3、Shift+F3";
                 return;
             }
             if (searchMatches.length === 0) {
-                searchMeta.textContent = "匹配：0";
+                searchMeta.textContent = "匹配：0（定位词：" + word + "）";
                 return;
             }
-            searchMeta.textContent = "匹配：" + (activeSearchIndex + 1) + " / " + searchMatches.length;
+            searchMeta.textContent = "匹配：" + (activeSearchIndex + 1) + " / " + searchMatches.length + "（定位词：" + word + "）";
         }
 
         function initLayoutMode() {
@@ -1805,6 +1886,20 @@
             });
         }
 
+        function initVisitCount() {
+            if (!visitStat) {
+                return;
+            }
+            var count = 1;
+            try {
+                var saved = parseInt(window.localStorage.getItem(visitStorageKey) || "0", 10);
+                count = isNaN(saved) ? 1 : saved + 1;
+                window.localStorage.setItem(visitStorageKey, String(count));
+            } catch (e) {
+                count = 1;
+            }
+            visitStat.textContent = "访问次数：" + count + "（本设备）";
+        }
         updateSearchMeta();
     })();
 </script>
