@@ -188,15 +188,64 @@
             margin-bottom: 14px;
         }
 
-        .control-grid {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(180px, 1fr));
-            gap: 10px;
+        .command-orbs {
+            margin-top: 6px;
             margin-bottom: 12px;
-            padding: 10px;
-            border: 1px solid var(--panel-border);
-            border-radius: 12px;
-            background: var(--panel-bg);
+            display: grid;
+            grid-template-columns: 1.15fr 1fr;
+            gap: 14px;
+        }
+
+        .orb-panel {
+            position: relative;
+            padding: 14px 16px 14px;
+            border: 1px solid var(--toolbar-border);
+            background: var(--toolbar-bg);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+            overflow: hidden;
+        }
+
+        .orb-panel::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 8% 50%, rgba(255, 255, 255, 0.2), transparent 48%);
+            opacity: 0.55;
+            pointer-events: none;
+        }
+
+        .orb-panel.orb-left {
+            border-radius: 120px 24px 24px 120px;
+        }
+
+        .orb-panel.orb-right {
+            border-radius: 24px 120px 120px 24px;
+        }
+
+        .orb-head {
+            position: relative;
+            z-index: 1;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.35px;
+            text-transform: uppercase;
+            color: var(--label-color);
+            margin-bottom: 10px;
+        }
+
+        .orb-fields {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(140px, 1fr));
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .orb-fields.search-zone {
+            grid-template-columns: 1fr;
         }
 
         .control-item {
@@ -213,47 +262,15 @@
             letter-spacing: 0.15px;
         }
 
-        .tool-actions {
-            margin-top: 12px;
-            margin-bottom: 12px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 10px;
-            padding: 10px;
-            border: 1px solid var(--toolbar-border);
-            border-radius: 12px;
-            background: var(--toolbar-bg);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-        }
-
-        .action-group {
+        .orb-buttons {
             position: relative;
+            z-index: 1;
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
-            align-items: center;
-            min-height: 58px;
-            padding: 12px 10px 10px;
-            border: 1px solid var(--toolbar-border);
-            border-radius: 10px;
-            background: var(--toolbar-pill-bg);
         }
 
-        .action-group::before {
-            content: attr(data-group);
-            position: absolute;
-            top: -8px;
-            left: 10px;
-            padding: 0 6px;
-            font-size: 11px;
-            line-height: 1.2;
-            color: var(--label-color);
-            letter-spacing: 0.2px;
-            background: var(--card-bg);
-            border-radius: 999px;
-        }
-
+        .orb-buttons .layui-btn,
         .tool-actions .layui-btn {
             margin-right: 0;
             margin-bottom: 0;
@@ -264,6 +281,7 @@
             isolation: isolate;
         }
 
+        .orb-buttons .layui-btn::before,
         .tool-actions .layui-btn::before {
             content: "";
             position: absolute;
@@ -278,16 +296,19 @@
             z-index: -1;
         }
 
+        .orb-buttons .layui-btn:hover,
         .tool-actions .layui-btn:hover {
             transform: translateY(-2px);
             box-shadow: var(--btn-shadow-hover);
             border-color: var(--panel-border-hover);
         }
 
+        .orb-buttons .layui-btn:hover::before,
         .tool-actions .layui-btn:hover::before {
             left: 145%;
         }
 
+        .orb-buttons .layui-btn:active,
         .tool-actions .layui-btn:active {
             transform: translateY(0);
             box-shadow: 0 3px 8px rgba(15, 23, 42, 0.1);
@@ -557,22 +578,32 @@
                 flex-direction: column;
             }
 
-            .control-grid {
-                grid-template-columns: repeat(2, minmax(180px, 1fr));
+            .command-orbs {
+                grid-template-columns: 1fr;
+            }
+
+            .orb-panel.orb-left,
+            .orb-panel.orb-right {
+                border-radius: 22px;
+            }
+
+            .orb-fields {
+                grid-template-columns: repeat(2, minmax(140px, 1fr));
             }
         }
 
         @media (max-width: 640px) {
-            .control-grid {
-                grid-template-columns: 1fr;
-            }
-
             .title-row {
                 flex-direction: column;
                 align-items: flex-start;
             }
 
-            .tool-actions {
+            .orb-fields {
+                grid-template-columns: 1fr;
+            }
+
+            .orb-buttons {
+                display: grid;
                 grid-template-columns: 1fr;
             }
 
@@ -598,50 +629,57 @@
         <h1 class="tool-title">JSON / XML 格式化工具</h1>
         <div id="visitStat" class="visit-stat">访问次数：--</div>
     </div>
-    <div class="control-grid">
-        <div class="control-item">
-            <label for="dataType">数据类型</label>
-            <select id="dataType" class="layui-input">
-                <option value="json">JSON</option>
-                <option value="xml">XML</option>
-            </select>
-        </div>
-        <div class="control-item">
-            <label for="layoutMode">布局切换</label>
-            <select id="layoutMode" class="layui-input">
-                <option value="vertical">上下布局</option>
-                <option value="horizontal">左右布局</option>
-            </select>
-        </div>
-        <div class="control-item">
-            <label for="themeMode">主题</label>
-            <select id="themeMode" class="layui-input">
-                <option value="light">浅色主题</option>
-                <option value="dark">深色主题</option>
-            </select>
-        </div>
-        <div class="control-item">
-            <label for="searchInput">高亮 / 定位</label>
-            <input id="searchInput" type="text" class="layui-input"
-                   placeholder="输入词用于高亮与定位，可多个（空格/逗号）；定位默认第1个词">
-        </div>
-    </div>
-    <div class="tool-actions">
-        <div class="action-group" data-group="编辑">
-            <button id="formatBtn" class="layui-btn btn-ripple">格式化并高亮</button>
-            <button id="validateBtn" class="layui-btn btn-ripple">格式验证</button>
-            <button id="foldBtn" class="layui-btn btn-ripple">折叠视图</button>
-        </div>
-        <div class="action-group" data-group="高亮与定位">
-            <button id="highlightBtn" class="layui-btn layui-btn-normal btn-ripple">仅重新高亮</button>
-            <button id="searchBtn" class="layui-btn layui-btn-primary btn-ripple">定位首个</button>
-            <button id="prevBtn" class="layui-btn layui-btn-primary btn-ripple">上一个</button>
-            <button id="nextBtn" class="layui-btn layui-btn-primary btn-ripple">下一个</button>
-        </div>
-        <div class="action-group" data-group="结果处理">
-            <button id="copyBtn" class="layui-btn layui-btn-warm btn-ripple">复制结果</button>
-            <button id="clearBtn" class="layui-btn layui-btn-primary btn-ripple">清空</button>
-        </div>
+    <div class="command-orbs">
+        <section class="orb-panel orb-left">
+            <div class="orb-head">左舱：切换 / 编辑</div>
+            <div class="orb-fields">
+                <div class="control-item">
+                    <label for="dataType">数据类型</label>
+                    <select id="dataType" class="layui-input">
+                        <option value="json">JSON</option>
+                        <option value="xml">XML</option>
+                    </select>
+                </div>
+                <div class="control-item">
+                    <label for="layoutMode">布局切换</label>
+                    <select id="layoutMode" class="layui-input">
+                        <option value="vertical">上下布局</option>
+                        <option value="horizontal">左右布局</option>
+                    </select>
+                </div>
+                <div class="control-item">
+                    <label for="themeMode">主题</label>
+                    <select id="themeMode" class="layui-input">
+                        <option value="light">浅色主题</option>
+                        <option value="dark">深色主题</option>
+                    </select>
+                </div>
+            </div>
+            <div class="orb-buttons">
+                <button id="formatBtn" class="layui-btn btn-ripple">格式化并高亮</button>
+                <button id="validateBtn" class="layui-btn btn-ripple">格式验证</button>
+                <button id="foldBtn" class="layui-btn btn-ripple">折叠视图</button>
+                <button id="copyBtn" class="layui-btn layui-btn-warm btn-ripple">复制结果</button>
+                <button id="clearBtn" class="layui-btn layui-btn-primary btn-ripple">清空</button>
+            </div>
+        </section>
+
+        <section class="orb-panel orb-right">
+            <div class="orb-head">右舱：搜索 / 定位</div>
+            <div class="orb-fields search-zone">
+                <div class="control-item">
+                    <label for="searchInput">高亮 / 定位</label>
+                    <input id="searchInput" type="text" class="layui-input"
+                           placeholder="输入词用于高亮与定位，可多个（空格/逗号）；定位默认第1个词">
+                </div>
+            </div>
+            <div class="orb-buttons">
+                <button id="highlightBtn" class="layui-btn layui-btn-normal btn-ripple">仅重新高亮</button>
+                <button id="searchBtn" class="layui-btn layui-btn-primary btn-ripple">定位首个</button>
+                <button id="prevBtn" class="layui-btn layui-btn-primary btn-ripple">上一个</button>
+                <button id="nextBtn" class="layui-btn layui-btn-primary btn-ripple">下一个</button>
+            </div>
+        </section>
     </div>
     <div id="errorText" class="status-banner"></div>
     <div id="layoutContainer" class="layout-container layout-vertical">
