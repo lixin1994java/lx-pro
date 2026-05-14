@@ -1,0 +1,1880 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JSON/XML 格式化工具</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --bg-spot-1: rgba(30, 128, 255, 0.08);
+      --bg-spot-2: rgba(99, 102, 241, 0.08);
+      --card: #ffffff;
+      --text: #1f2d3d;
+      --muted: #667085;
+      --border: #e5e7eb;
+      --primary: #1e80ff;
+      --primary-dark: #1769d1;
+      --ok: #16a34a;
+      --error: #ef4444;
+      --code-bg: #111827;
+      --code-fg: #e5e7eb;
+      --ring: rgba(30, 128, 255, 0.16);
+      --card-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      --card-shadow-hover: 0 16px 40px rgba(15, 23, 42, 0.12);
+      --surface-soft: #fbfcff;
+      --surface-soft-border: #e9edf5;
+      --surface-soft-border-hover: #dbe5f5;
+      --result-border: #1f2937;
+      --result-hover-border: #374151;
+      --result-hover-shadow: 0 8px 18px rgba(2, 6, 23, 0.26);
+      --fold-branch: #374151;
+      --fold-summary: #93c5fd;
+      --fold-summary-hover: #bfdbfe;
+      --fold-line: #e5e7eb;
+      --fold-key: #93c5fd;
+      --fold-value: #fde68a;
+      --scroll-thumb: rgba(148, 163, 184, 0.45);
+      --scroll-thumb-hover: rgba(148, 163, 184, 0.68);
+      --card-glow: linear-gradient(120deg, rgba(30, 128, 255, 0.16), rgba(99, 102, 241, 0.08), rgba(56, 189, 248, 0.12));
+      --panel-glow: linear-gradient(125deg, rgba(30, 128, 255, 0.08), rgba(99, 102, 241, 0.02));
+      --btn-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
+      --btn-shadow-hover: 0 8px 18px rgba(15, 23, 42, 0.14);
+      --toolbar-bg: rgba(248, 251, 255, 0.86);
+      --toolbar-border: #dbe6f5;
+      --toolbar-pill-bg: rgba(255, 255, 255, 0.78);
+      --select-glass: rgba(255, 255, 255, 0.68);
+      --select-glass-hover: rgba(255, 255, 255, 0.9);
+      --ripple-ink: rgba(255, 255, 255, 0.52);
+    }
+
+    [data-theme="dark"] {
+      --bg: #0b1220;
+      --bg-spot-1: rgba(47, 109, 255, 0.16);
+      --bg-spot-2: rgba(93, 108, 255, 0.14);
+      --card: #111a2c;
+      --text: #e6edf7;
+      --muted: #9fb0c8;
+      --border: #2a3950;
+      --primary: #5ea2ff;
+      --primary-dark: #3f87f0;
+      --ok: #29c37f;
+      --error: #ff6b6b;
+      --code-bg: #0a0f1d;
+      --code-fg: #d9e5ff;
+      --ring: rgba(94, 162, 255, 0.28);
+      --card-shadow: 0 10px 34px rgba(0, 0, 0, 0.36);
+      --card-shadow-hover: 0 16px 44px rgba(0, 0, 0, 0.44);
+      --surface-soft: #0f1a2e;
+      --surface-soft-border: #24324a;
+      --surface-soft-border-hover: #335073;
+      --result-border: #2d3a52;
+      --result-hover-border: #46618a;
+      --result-hover-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+      --fold-branch: #3c4e6f;
+      --fold-summary: #8fc1ff;
+      --fold-summary-hover: #b7d8ff;
+      --fold-line: #d7e2f7;
+      --fold-key: #9bc7ff;
+      --fold-value: #ffe59c;
+      --scroll-thumb: rgba(148, 163, 184, 0.52);
+      --scroll-thumb-hover: rgba(148, 163, 184, 0.74);
+      --card-glow: linear-gradient(120deg, rgba(94, 162, 255, 0.24), rgba(139, 92, 246, 0.16), rgba(34, 197, 94, 0.12));
+      --panel-glow: linear-gradient(125deg, rgba(94, 162, 255, 0.14), rgba(99, 102, 241, 0.04));
+      --btn-shadow: 0 4px 12px rgba(0, 0, 0, 0.24);
+      --btn-shadow-hover: 0 10px 22px rgba(0, 0, 0, 0.35);
+      --toolbar-bg: rgba(15, 26, 46, 0.84);
+      --toolbar-border: #324867;
+      --toolbar-pill-bg: rgba(17, 31, 53, 0.72);
+      --select-glass: rgba(21, 37, 64, 0.64);
+      --select-glass-hover: rgba(28, 47, 78, 0.84);
+      --ripple-ink: rgba(191, 219, 254, 0.38);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 8% 8%, var(--bg-spot-1), transparent 30%),
+        radial-gradient(circle at 92% 92%, var(--bg-spot-2), transparent 36%),
+        var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      padding: 20px;
+      background-attachment: fixed;
+    }
+
+    .container {
+      max-width: none;
+      width: calc(100vw - 24px);
+      min-height: calc(100vh - 24px);
+      margin: 0 auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px;
+      box-shadow: var(--card-shadow);
+      transition: box-shadow 220ms ease, transform 220ms ease;
+      animation: card-enter 320ms ease both;
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .container:hover {
+      box-shadow: var(--card-shadow-hover);
+      transform: translateY(-1px);
+    }
+
+    .container::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: var(--card-glow);
+      opacity: 0;
+      transition: opacity 280ms ease;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .container::after {
+      content: "";
+      position: absolute;
+      width: 40%;
+      height: 220%;
+      left: -55%;
+      top: -60%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+      transform: rotate(14deg);
+      transition: left 520ms ease;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container:hover::before {
+      opacity: 1;
+    }
+
+    .container:hover::after {
+      left: 125%;
+    }
+
+    .title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 0 0 16px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      letter-spacing: 0.2px;
+    }
+
+    .control-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(180px, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+      padding: 10px;
+      border: 1px solid var(--surface-soft-border);
+      border-radius: 12px;
+      background: var(--surface-soft);
+    }
+
+    .visit-stat {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 6px 10px;
+      border: 1px solid var(--surface-soft-border);
+      border-radius: 999px;
+      background: var(--surface-soft);
+      white-space: nowrap;
+    }
+
+    .control-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.15px;
+    }
+
+    select,
+    input,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 14px;
+      outline: none;
+      background: var(--card);
+      color: var(--text);
+      transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+    }
+
+    select {
+      background: var(--select-glass);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    select:hover {
+      background: var(--select-glass-hover);
+    }
+
+    select:focus,
+    input:focus,
+    textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--ring);
+      background: var(--surface-soft);
+    }
+
+    textarea {
+      min-height: 220px;
+      resize: vertical;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      line-height: 1.6;
+    }
+
+    .actions {
+      margin: 12px 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+      padding: 10px;
+      border: 1px solid var(--toolbar-border);
+      border-radius: 12px;
+      background: var(--toolbar-bg);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .action-group {
+      position: relative;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      min-height: 58px;
+      padding: 12px 10px 10px;
+      border: 1px solid var(--toolbar-border);
+      border-radius: 10px;
+      background: var(--toolbar-pill-bg);
+    }
+
+    .action-group::before {
+      content: attr(data-group);
+      position: absolute;
+      top: -8px;
+      left: 10px;
+      padding: 0 6px;
+      font-size: 11px;
+      line-height: 1.2;
+      color: var(--muted);
+      letter-spacing: 0.2px;
+      background: var(--card);
+      border-radius: 999px;
+    }
+
+    .layout-container {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .layout-container.layout-vertical {
+      flex-direction: column;
+    }
+
+    .layout-container.layout-horizontal {
+      flex-direction: row;
+    }
+
+    .layout-panel {
+      flex: 1;
+      min-width: 0;
+      background: var(--surface-soft);
+      border: 1px solid var(--surface-soft-border);
+      border-radius: 10px;
+      padding: 12px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 4px 10px rgba(15, 23, 42, 0.04);
+      transition: box-shadow 220ms ease, border-color 220ms ease, transform 220ms ease;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .layout-panel:hover {
+      border-color: var(--surface-soft-border-hover);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 10px 22px rgba(15, 23, 42, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .layout-panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: var(--panel-glow);
+      opacity: 0;
+      transition: opacity 220ms ease;
+      pointer-events: none;
+    }
+
+    .layout-panel:hover::before {
+      opacity: 1;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+      min-height: 24px;
+    }
+
+    .panel-label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      margin-bottom: 0;
+    }
+
+    .panel-note {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    button {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      cursor: pointer;
+      background: var(--card);
+      color: var(--text);
+      transition: transform 160ms ease, box-shadow 220ms ease, background-color 220ms ease, border-color 220ms ease;
+      box-shadow: var(--btn-shadow);
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    button::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -130%;
+      width: 80%;
+      height: 100%;
+      background: linear-gradient(110deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+      transform: skewX(-18deg);
+      transition: left 420ms ease;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--btn-shadow-hover);
+      border-color: var(--surface-soft-border-hover);
+    }
+
+    button:hover::before {
+      left: 145%;
+    }
+
+    button:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+    }
+
+    button.primary {
+      background: linear-gradient(180deg, #318aff, var(--primary));
+      color: #fff;
+      border-color: var(--primary);
+      box-shadow: 0 8px 18px rgba(30, 128, 255, 0.28);
+    }
+
+    button.primary:hover {
+      border-color: var(--primary-dark);
+      background: linear-gradient(180deg, #3c92ff, var(--primary-dark));
+      box-shadow: 0 10px 22px rgba(30, 128, 255, 0.32);
+    }
+
+    .button-ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: var(--ripple-ink);
+      transform: translate(-50%, -50%) scale(0);
+      pointer-events: none;
+      animation: ripple-wave 540ms cubic-bezier(0.22, 1, 0.36, 1);
+      z-index: 0;
+    }
+
+    .meta {
+      min-height: 22px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .meta.error { color: var(--error); }
+    .meta.ok { color: var(--ok); }
+
+    .status-banner {
+      min-height: 22px;
+      margin: 0 0 8px;
+      font-size: 13px;
+      color: var(--muted);
+      padding: 0 2px;
+    }
+
+    .status-banner.error {
+      color: var(--error);
+    }
+
+    .status-banner.ok {
+      color: var(--ok);
+    }
+
+    .result-box {
+      margin: 0;
+      border: 1px solid var(--result-border);
+      border-radius: 10px;
+      background: var(--code-bg);
+      color: var(--code-fg);
+      min-height: 320px;
+      max-height: 620px;
+      overflow: auto;
+      padding: 14px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.6;
+      font-size: 13px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      transition: border-color 180ms ease, box-shadow 180ms ease;
+      flex: 1;
+    }
+
+    .result-box:hover {
+      border-color: var(--result-hover-border);
+      box-shadow: var(--result-hover-shadow);
+    }
+
+    .result-box.fold-mode {
+      white-space: normal;
+      word-break: normal;
+    }
+
+    .fold-tree details {
+      margin-left: 14px;
+      padding-left: 4px;
+      border-left: 1px dashed var(--fold-branch);
+    }
+
+    .fold-tree > details {
+      margin-left: 0;
+      border-left: none;
+      padding-left: 0;
+    }
+
+    .fold-tree summary {
+      cursor: pointer;
+      color: var(--fold-summary);
+      margin: 4px 0;
+      font-weight: 600;
+      transition: color 150ms ease;
+    }
+
+    .fold-tree summary:hover {
+      color: var(--fold-summary-hover);
+    }
+
+    .fold-tree .fold-line {
+      margin: 4px 0 4px 16px;
+      color: var(--fold-line);
+    }
+
+    .fold-tree .fold-key {
+      color: var(--fold-key);
+    }
+
+    .fold-tree .fold-value {
+      color: var(--fold-value);
+    }
+
+    .keyword-highlight {
+      background: #fde68a;
+      color: #111827;
+      border-radius: 3px;
+      padding: 0 1px;
+    }
+
+    .search-highlight {
+      background: #93c5fd;
+      color: #0f172a;
+      border-radius: 3px;
+      padding: 0 1px;
+    }
+
+    .search-highlight-active {
+      background: #fb923c;
+      color: #111827;
+      border-radius: 3px;
+      padding: 0 1px;
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+    }
+
+    .result-box::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+
+    .result-box::-webkit-scrollbar-thumb {
+      background: var(--scroll-thumb);
+      border-radius: 12px;
+      border: 2px solid transparent;
+      background-clip: content-box;
+    }
+
+    .result-box::-webkit-scrollbar-thumb:hover {
+      background: var(--scroll-thumb-hover);
+      background-clip: content-box;
+    }
+
+    #sourceText {
+      min-height: 320px;
+      flex: 1;
+    }
+
+    @keyframes ripple-wave {
+      to {
+        transform: translate(-50%, -50%) scale(16);
+        opacity: 0;
+      }
+    }
+
+    @keyframes card-enter {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 900px) {
+      .layout-container.layout-horizontal {
+        flex-direction: column;
+      }
+
+      .control-grid {
+        grid-template-columns: repeat(2, minmax(180px, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      .control-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .title-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .actions {
+        grid-template-columns: 1fr;
+      }
+
+      .panel-head {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="title-row">
+    <h1>JSON / XML 格式化工具</h1>
+    <div id="visitStat" class="visit-stat">访问次数：--</div>
+  </div>
+
+  <div class="control-grid">
+    <div class="control-item">
+      <label for="dataType">数据类型</label>
+      <select id="dataType">
+        <option value="json">JSON</option>
+        <option value="xml">XML</option>
+      </select>
+    </div>
+    <div class="control-item">
+      <label for="layoutMode">布局切换</label>
+      <select id="layoutMode">
+        <option value="vertical">上下布局</option>
+        <option value="horizontal">左右布局</option>
+      </select>
+    </div>
+    <div class="control-item">
+      <label for="themeMode">主题</label>
+      <select id="themeMode">
+        <option value="light">浅色主题</option>
+        <option value="dark">深色主题</option>
+      </select>
+    </div>
+    <div class="control-item">
+      <label for="searchInput">高亮 / 定位</label>
+      <input id="searchInput" placeholder="输入词用于高亮与定位，可多个（空格/逗号）；定位默认第1个词">
+    </div>
+  </div>
+
+  <div class="actions">
+    <div class="action-group" data-group="编辑">
+      <button id="formatBtn" class="primary btn-ripple">格式化并高亮</button>
+      <button id="validateBtn" class="btn-ripple">格式验证</button>
+      <button id="foldBtn" class="btn-ripple">折叠视图</button>
+    </div>
+    <div class="action-group" data-group="高亮与定位">
+      <button id="highlightBtn" class="btn-ripple">仅重新高亮</button>
+      <button id="searchBtn" class="btn-ripple">定位首个</button>
+      <button id="prevBtn" class="btn-ripple">上一个</button>
+      <button id="nextBtn" class="btn-ripple">下一个</button>
+    </div>
+    <div class="action-group" data-group="结果处理">
+      <button id="copyBtn" class="btn-ripple">复制结果</button>
+      <button id="clearBtn" class="btn-ripple">清空</button>
+    </div>
+  </div>
+
+  <div id="status" class="status-banner"></div>
+
+  <div id="layoutContainer" class="layout-container layout-vertical">
+    <div class="layout-panel">
+      <div class="panel-head">
+        <div class="panel-label">原始内容</div>
+        <div class="panel-note">输入区：支持粘贴与直接编辑</div>
+      </div>
+      <textarea id="sourceText" placeholder="请输入 JSON 或 XML 字符串"></textarea>
+    </div>
+    <div class="layout-panel">
+      <div class="panel-head">
+        <div class="panel-label">结果预览</div>
+        <div id="searchMeta" class="panel-note">快捷键：Ctrl/Cmd+Enter、F3、Shift+F3</div>
+      </div>
+      <div id="resultView" class="result-box"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var sourceText = document.getElementById("sourceText");
+    var searchInput = document.getElementById("searchInput");
+    var dataType = document.getElementById("dataType");
+    var layoutMode = document.getElementById("layoutMode");
+    var themeMode = document.getElementById("themeMode");
+    var layoutContainer = document.getElementById("layoutContainer");
+    var foldBtn = document.getElementById("foldBtn");
+    var resultView = document.getElementById("resultView");
+    var status = document.getElementById("status");
+    var searchMeta = document.getElementById("searchMeta");
+    var visitStat = document.getElementById("visitStat");
+    var layoutStorageKey = "formatter.layout.mode";
+    var themeStorageKey = "formatter.theme.mode";
+    var visitStorageKey = "formatter.visit.count";
+
+    var lastFormattedText = "";
+    var structuredData = null;
+    var searchMatches = [];
+    var activeSearchIndex = -1;
+    var lastSearchWord = "";
+    var currentViewMode = "text";
+
+    initLayoutMode();
+    initThemeMode();
+    initVisitCount();
+    initButtonRipples();
+    layoutMode.addEventListener("change", function () {
+      applyLayout(layoutMode.value);
+    });
+    themeMode.addEventListener("change", function () {
+      applyTheme(themeMode.value);
+    });
+    foldBtn.addEventListener("click", function () {
+      toggleFoldView();
+    });
+
+    document.getElementById("formatBtn").addEventListener("click", function () {
+      clearStatus();
+      var content = sourceText.value;
+      if (!content || !content.trim()) {
+        setStatus("请输入要处理的内容。", true);
+        return;
+      }
+      try {
+        var formatted;
+        if (dataType.value === "json") {
+          var jsonResult = formatJsonWithAssist(content);
+          formatted = jsonResult.formatted;
+          structuredData = { type: "json", value: jsonResult.parsedValue };
+          if (jsonResult.autoFixed) {
+            var changeText = jsonResult.changes && jsonResult.changes.length ? "（" + jsonResult.changes.join("、") + "）" : "";
+            setStatus("已完成智能修正并格式化 " + changeText, false);
+          }
+        } else {
+          formatted = formatContent(content, dataType.value);
+          structuredData = { type: "xml", value: parseXmlForFold(content) };
+        }
+        lastFormattedText = formatted;
+        renderOutput(true);
+      } catch (e) {
+        structuredData = null;
+        if (currentViewMode === "fold") {
+          currentViewMode = "text";
+          foldBtn.textContent = "折叠视图";
+          resultView.classList.remove("fold-mode");
+        }
+        setStatus(e.message, true);
+        if (dataType.value !== "json") {
+          resultView.textContent = "";
+        }
+      }
+    });
+
+    document.getElementById("validateBtn").addEventListener("click", function () {
+      clearStatus();
+      var content = sourceText.value;
+      if (!content || !content.trim()) {
+        setStatus("请输入要校验的内容。", true);
+        return;
+      }
+      if (dataType.value === "json") {
+        var parsed = tryParseJson(content);
+        if (parsed.ok) {
+          setStatus("JSON 格式校验通过。", false);
+          return;
+        }
+        var errorInfo = getJsonErrorInfo(content, parsed.error);
+        highlightJsonErrorPosition(errorInfo);
+        setStatus(buildJsonErrorMessage(errorInfo, false, []), true);
+        return;
+      }
+      if (dataType.value === "xml") {
+        var xmlCheck = validateXmlContent(content);
+        if (xmlCheck.ok) {
+          setStatus("XML 格式校验通过。", false);
+          return;
+        }
+        if (xmlCheck.preview) {
+          resultView.textContent = "错误定位：\n" + xmlCheck.preview;
+        }
+        if (xmlCheck.index >= 0 && typeof sourceText.setSelectionRange === "function") {
+          var start = Math.min(xmlCheck.index, sourceText.value.length);
+          var end = Math.min(start + 1, sourceText.value.length);
+          sourceText.focus();
+          sourceText.setSelectionRange(start, end);
+          sourceText.style.borderColor = "#ef4444";
+        }
+        setStatus(xmlCheck.message, true);
+      }
+    });
+
+    document.getElementById("highlightBtn").addEventListener("click", function () {
+      if (!lastFormattedText) {
+        setStatus("请先执行格式化。", true);
+        return;
+      }
+      clearStatus();
+      renderOutput(true);
+    });
+
+    document.getElementById("searchBtn").addEventListener("click", function () {
+      locateFirst();
+    });
+    document.getElementById("prevBtn").addEventListener("click", function () {
+      locateStep(-1);
+    });
+    document.getElementById("nextBtn").addEventListener("click", function () {
+      locateStep(1);
+    });
+
+    document.getElementById("copyBtn").addEventListener("click", function () {
+      if (!lastFormattedText) {
+        setStatus("当前没有可复制的结果。", true);
+        return;
+      }
+      copyText(lastFormattedText);
+    });
+
+    document.getElementById("clearBtn").addEventListener("click", function () {
+      sourceText.value = "";
+      searchInput.value = "";
+      lastFormattedText = "";
+      structuredData = null;
+      searchMatches = [];
+      activeSearchIndex = -1;
+      lastSearchWord = "";
+      currentViewMode = "text";
+      foldBtn.textContent = "折叠视图";
+      resultView.textContent = "";
+      resultView.classList.remove("fold-mode");
+      clearStatus();
+      updateSearchMeta();
+    });
+
+    searchInput.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        locateFirst();
+      }
+    });
+
+    document.addEventListener("keydown", function (event) {
+      var key = (event.key || "").toLowerCase();
+      if ((event.ctrlKey || event.metaKey) && key === "enter") {
+        event.preventDefault();
+        document.getElementById("formatBtn").click();
+        return;
+      }
+      if (event.key === "F3") {
+        event.preventDefault();
+        locateStep(event.shiftKey ? -1 : 1);
+      }
+    });
+
+    function formatContent(content, type) {
+      if (type === "json") {
+        try {
+          return JSON.stringify(JSON.parse(content), null, 2);
+        } catch (e) {
+          throw new Error("JSON 格式不合法，请检查后重试。");
+        }
+      }
+      if (type === "xml") {
+        return formatXml(content);
+      }
+      throw new Error("不支持的数据类型。");
+    }
+
+    function formatJsonWithAssist(content) {
+      var parsed = tryParseJson(content);
+      if (parsed.ok) {
+        return {
+          formatted: JSON.stringify(parsed.value, null, 2),
+          autoFixed: false,
+          parsedValue: parsed.value,
+          changes: []
+        };
+      }
+
+      var errorInfo = getJsonErrorInfo(content, parsed.error);
+      highlightJsonErrorPosition(errorInfo);
+
+      var repaired = applyJsonRepairPipeline(content);
+      if (repaired.text !== content) {
+        var changeText = repaired.changes.length ? "，将尝试：" + repaired.changes.join("、") : "";
+        var shouldFix = window.confirm("检测到 JSON 有问题，是否一键智能修正" + changeText + "？");
+        if (shouldFix) {
+          var mergedChanges = repaired.changes.slice();
+          var fixedText = repaired.text;
+          for (var round = 0; round < 2; round++) {
+            var roundParsed = tryParseJson(fixedText);
+            if (roundParsed.ok) {
+              sourceText.value = fixedText;
+              return {
+                formatted: JSON.stringify(roundParsed.value, null, 2),
+                autoFixed: true,
+                parsedValue: roundParsed.value,
+                changes: mergedChanges
+              };
+            }
+            var nextRepair = applyJsonRepairPipeline(fixedText);
+            if (nextRepair.text === fixedText) {
+              var fixedInfo = getJsonErrorInfo(fixedText, roundParsed.error);
+              highlightJsonErrorPosition(fixedInfo);
+              throw new Error(buildJsonErrorMessage(fixedInfo, true, mergedChanges));
+            }
+            fixedText = nextRepair.text;
+            mergedChanges = mergeChangeList(mergedChanges, nextRepair.changes);
+          }
+
+          var finalParsed = tryParseJson(fixedText);
+          if (finalParsed.ok) {
+            sourceText.value = fixedText;
+            return {
+              formatted: JSON.stringify(finalParsed.value, null, 2),
+              autoFixed: true,
+              parsedValue: finalParsed.value,
+              changes: mergedChanges
+            };
+          }
+          var finalInfo = getJsonErrorInfo(fixedText, finalParsed.error);
+          highlightJsonErrorPosition(finalInfo);
+          throw new Error(buildJsonErrorMessage(finalInfo, true, mergedChanges));
+        }
+      }
+      throw new Error(buildJsonErrorMessage(errorInfo, false, repaired.changes));
+    }
+
+    function tryParseJson(content) {
+      try {
+        return { ok: true, value: JSON.parse(content) };
+      } catch (error) {
+        return { ok: false, error: error };
+      }
+    }
+
+    function applyJsonRepairPipeline(content) {
+      var text = content;
+      var changes = [];
+
+      function applyFix(name, fixer) {
+        var next = fixer(text);
+        if (next !== text) {
+          text = next;
+          changes.push(name);
+        }
+      }
+
+      applyFix("清理包装与特殊符号", normalizeJsonInput);
+      applyFix("去除注释", stripJsonComments);
+      applyFix("对象键补双引号", quoteUnquotedKeys);
+      applyFix("单引号字符串转双引号", convertSingleQuotedStrings);
+      applyFix("常见字面量转 JSON", normalizeCommonLiterals);
+      applyFix("补全缺失逗号", addMissingCommas);
+      applyFix("移除尾随逗号", removeTrailingCommas);
+      applyFix("补全括号", balanceJsonBrackets);
+
+      return {
+        text: text,
+        changes: changes
+      };
+    }
+
+    function normalizeJsonInput(content) {
+      var text = content;
+      text = text.replace(/^\uFEFF/, "");
+      text = stripMarkdownCodeFence(text);
+      text = text
+        .replace(/[“”]/g, "\"")
+        .replace(/[‘’]/g, "'")
+        .replace(/，/g, ",")
+        .replace(/：/g, ":")
+        .replace(/；/g, ",")
+        .replace(/[｛]/g, "{")
+        .replace(/[｝]/g, "}")
+        .replace(/[【]/g, "[")
+        .replace(/[】]/g, "]");
+
+      var trimmed = text.trim();
+      trimmed = trimmed
+        .replace(/^\s*(?:var|let|const)\s+[A-Za-z_$][\w$]*\s*=\s*/, "")
+        .replace(/^\s*[A-Za-z_$][\w$]*\s*=\s*/, "")
+        .replace(/;\s*$/, "");
+
+      if (trimmed.charAt(0) === "(" && trimmed.charAt(trimmed.length - 1) === ")") {
+        var inner = trimmed.slice(1, -1).trim();
+        if ((inner.charAt(0) === "{" && inner.charAt(inner.length - 1) === "}") ||
+            (inner.charAt(0) === "[" && inner.charAt(inner.length - 1) === "]")) {
+          trimmed = inner;
+        }
+      }
+      return trimmed;
+    }
+
+    function stripMarkdownCodeFence(content) {
+      var text = content.trim();
+      if (/^```/i.test(text) && /```$/.test(text)) {
+        return text
+          .replace(/^```(?:json|javascript|js)?\s*/i, "")
+          .replace(/\s*```$/, "");
+      }
+      return content;
+    }
+
+    function stripJsonComments(content) {
+      var out = "";
+      var inDouble = false;
+      var inSingle = false;
+      var inLineComment = false;
+      var inBlockComment = false;
+
+      for (var i = 0; i < content.length; i++) {
+        var ch = content.charAt(i);
+        var next = i + 1 < content.length ? content.charAt(i + 1) : "";
+
+        if (inLineComment) {
+          if (ch === "\n") {
+            inLineComment = false;
+            out += ch;
+          }
+          continue;
+        }
+        if (inBlockComment) {
+          if (ch === "*" && next === "/") {
+            inBlockComment = false;
+            i++;
+          }
+          continue;
+        }
+
+        if (!inDouble && !inSingle && ch === "/" && next === "/") {
+          inLineComment = true;
+          i++;
+          continue;
+        }
+        if (!inDouble && !inSingle && ch === "/" && next === "*") {
+          inBlockComment = true;
+          i++;
+          continue;
+        }
+
+        if (ch === "\"" && !inSingle) {
+          var escaped = i > 0 && content.charAt(i - 1) === "\\";
+          if (!escaped) {
+            inDouble = !inDouble;
+          }
+        } else if (ch === "'" && !inDouble) {
+          var escapedSingle = i > 0 && content.charAt(i - 1) === "\\";
+          if (!escapedSingle) {
+            inSingle = !inSingle;
+          }
+        }
+        out += ch;
+      }
+      return out;
+    }
+
+    function replaceOutsideStrings(content, replacer) {
+      var out = "";
+      var chunk = "";
+      var mode = "normal";
+
+      for (var i = 0; i < content.length; i++) {
+        var ch = content.charAt(i);
+        if (mode === "normal") {
+          if (ch === "\"" || ch === "'") {
+            out += replacer(chunk);
+            chunk = "";
+            out += ch;
+            mode = ch === "\"" ? "double" : "single";
+          } else {
+            chunk += ch;
+          }
+        } else {
+          out += ch;
+          if (ch === "\\") {
+            i++;
+            if (i < content.length) {
+              out += content.charAt(i);
+            }
+            continue;
+          }
+          if ((mode === "double" && ch === "\"") || (mode === "single" && ch === "'")) {
+            mode = "normal";
+          }
+        }
+      }
+      out += replacer(chunk);
+      return out;
+    }
+
+    function normalizeCommonLiterals(content) {
+      return replaceOutsideStrings(content, function (segment) {
+        var normalized = segment
+          .replace(/\bTrue\b/g, "true")
+          .replace(/\bFalse\b/g, "false")
+          .replace(/\bNone\b/g, "null")
+          .replace(/\bundefined\b/g, "null")
+          .replace(/\bNaN\b/g, "null");
+
+        normalized = normalized.replace(/(:\s*)([A-Za-z_\u4e00-\u9fa5$][\w\-\u4e00-\u9fa5$]*)(\s*[,}\]])/g, function (m, p1, p2, p3) {
+          if (/^(true|false|null)$/i.test(p2)) {
+            return p1 + p2.toLowerCase() + p3;
+          }
+          return p1 + "\"" + p2 + "\"" + p3;
+        });
+        return normalized;
+      });
+    }
+
+    function addMissingCommas(content) {
+      return replaceOutsideStrings(content, function (segment) {
+        return segment
+          .replace(/([}\]"0-9a-zA-Z])(\s*\n\s*)(?=(["{\[]|[A-Za-z_\u4e00-\u9fa5$][\w\-\u4e00-\u9fa5$]*\s*:))/g, "$1,$2")
+          .replace(/([}\]"0-9a-zA-Z])(\s{2,})(?=(["{\[]))/g, "$1,$2");
+      });
+    }
+
+    function removeTrailingCommas(content) {
+      return replaceOutsideStrings(content, function (segment) {
+        return segment.replace(/,\s*([}\]])/g, "$1");
+      });
+    }
+
+    function balanceJsonBrackets(content) {
+      var out = "";
+      var stack = [];
+      var mode = "normal";
+
+      for (var i = 0; i < content.length; i++) {
+        var ch = content.charAt(i);
+        if (mode === "normal") {
+          if (ch === "\"" || ch === "'") {
+            mode = ch === "\"" ? "double" : "single";
+            out += ch;
+            continue;
+          }
+          if (ch === "{" || ch === "[") {
+            stack.push(ch);
+            out += ch;
+            continue;
+          }
+          if (ch === "}" || ch === "]") {
+            if (stack.length === 0) {
+              continue;
+            }
+            var top = stack[stack.length - 1];
+            if ((top === "{" && ch === "}") || (top === "[" && ch === "]")) {
+              stack.pop();
+              out += ch;
+              continue;
+            }
+            continue;
+          }
+          out += ch;
+          continue;
+        }
+
+        out += ch;
+        if (ch === "\\") {
+          i++;
+          if (i < content.length) {
+            out += content.charAt(i);
+          }
+          continue;
+        }
+        if ((mode === "double" && ch === "\"") || (mode === "single" && ch === "'")) {
+          mode = "normal";
+        }
+      }
+
+      while (stack.length > 0) {
+        var left = stack.pop();
+        out += left === "{" ? "}" : "]";
+      }
+      return out;
+    }
+
+    function quoteUnquotedKeys(content) {
+      return content.replace(/([{,]\s*)([A-Za-z_\u4e00-\u9fa5$][\w\-\u4e00-\u9fa5$]*)(\s*:)/g, "$1\"$2\"$3");
+    }
+
+    function convertSingleQuotedStrings(content) {
+      return content.replace(/'([^'\\]*(?:\\.[^'\\]*)*)'/g, function (_, body) {
+        var unescaped = body.replace(/\\'/g, "'");
+        var escaped = unescaped.replace(/"/g, "\\\"");
+        return "\"" + escaped + "\"";
+      });
+    }
+
+    function mergeChangeList(listA, listB) {
+      var map = {};
+      var merged = [];
+      var all = (listA || []).concat(listB || []);
+      for (var i = 0; i < all.length; i++) {
+        if (!map[all[i]]) {
+          map[all[i]] = true;
+          merged.push(all[i]);
+        }
+      }
+      return merged;
+    }
+
+    function getJsonErrorInfo(content, error) {
+      var index = extractJsonErrorIndex(content, error);
+      var line = 0;
+      var column = 0;
+      if (index >= 0) {
+        var lineCol = getLineColumnByIndex(content, index);
+        line = lineCol.line;
+        column = lineCol.column;
+      }
+      return {
+        index: index,
+        line: line,
+        column: column,
+        preview: buildJsonErrorPreview(content, index),
+        rawMessage: error && error.message ? error.message : ""
+      };
+    }
+
+    function extractJsonErrorIndex(content, error) {
+      var message = error && error.message ? error.message : "";
+      var posMatch = message.match(/position\s+(\d+)/i);
+      if (posMatch) {
+        return parseInt(posMatch[1], 10);
+      }
+      var lineColMatch = message.match(/line\s+(\d+)\s+column\s+(\d+)/i);
+      if (lineColMatch) {
+        return indexFromLineColumn(content, parseInt(lineColMatch[1], 10), parseInt(lineColMatch[2], 10));
+      }
+      return -1;
+    }
+
+    function getLineColumnByIndex(content, index) {
+      var safeIndex = Math.max(0, Math.min(index, content.length));
+      var before = content.slice(0, safeIndex).split("\n");
+      return {
+        line: before.length,
+        column: before[before.length - 1].length + 1
+      };
+    }
+
+    function indexFromLineColumn(content, line, column) {
+      if (line <= 0 || column <= 0) {
+        return -1;
+      }
+      var lines = content.split("\n");
+      if (line > lines.length) {
+        return -1;
+      }
+      var index = 0;
+      for (var i = 0; i < line - 1; i++) {
+        index += lines[i].length + 1;
+      }
+      return index + column - 1;
+    }
+
+    function buildJsonErrorPreview(content, index) {
+      if (index < 0) {
+        return "";
+      }
+      var lineCol = getLineColumnByIndex(content, index);
+      var lines = content.split("\n");
+      var lineText = lines[lineCol.line - 1] || "";
+      var pointer = new Array(Math.max(lineCol.column, 1)).join(" ") + "^";
+      return lineText + "\n" + pointer;
+    }
+
+    function buildJsonErrorMessage(errorInfo, isAutoFixedRetry, appliedChanges) {
+      var prefix = isAutoFixedRetry ? "JSON 自动修正后仍有错误" : "JSON 格式错误";
+      var changeText = appliedChanges && appliedChanges.length ? " 已尝试：" + appliedChanges.join("、") + "。" : "";
+      var detail = errorInfo.rawMessage ? " 原始错误：" + errorInfo.rawMessage.replace(/\s+/g, " ") : "";
+      if (errorInfo.line > 0) {
+        return prefix + "，第 " + errorInfo.line + " 行第 " + errorInfo.column + " 列附近有问题。" + changeText + detail;
+      }
+      return prefix + "，但暂时无法定位具体行列。" + changeText + detail;
+    }
+
+    function highlightJsonErrorPosition(errorInfo) {
+      if (!errorInfo) {
+        return;
+      }
+      if (errorInfo.preview) {
+        resultView.textContent = "错误定位：\n" + errorInfo.preview;
+      }
+      if (errorInfo.index >= 0 && typeof sourceText.setSelectionRange === "function") {
+        var caretStart = Math.min(errorInfo.index, sourceText.value.length);
+        var caretEnd = Math.min(caretStart + 1, sourceText.value.length);
+        sourceText.focus();
+        sourceText.setSelectionRange(caretStart, caretEnd);
+      }
+      sourceText.style.borderColor = "#ef4444";
+    }
+
+    function parseXmlForFold(xmlString) {
+      var parser = new DOMParser();
+      var xmlDoc = parser.parseFromString(xmlString, "application/xml");
+      if (xmlDoc.getElementsByTagName("parsererror").length > 0) {
+        throw new Error("XML 格式不合法，请检查后重试。");
+      }
+      return xmlDoc;
+    }
+
+    function formatXml(xmlString) {
+      var xmlDoc = parseXmlForFold(xmlString);
+
+      var serialized = new XMLSerializer().serializeToString(xmlDoc);
+      var xml = serialized.replace(/(>)(<)(\/*)/g, "$1\n$2$3");
+      var lines = xml.split("\n");
+      var indent = 0;
+      var out = [];
+
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i].trim();
+        if (!line) {
+          continue;
+        }
+        var isClosingTag = /^<\/[^>]+>$/.test(line);
+        var isDeclarationOrComment = /^<\?/.test(line) || /^<!/.test(line);
+        var isSelfClosingTag = /\/>$/.test(line);
+        var isOpeningTag = /^<[^!?\/][^>]*>$/.test(line) && !isSelfClosingTag && !/<\/[^>]+>$/.test(line);
+
+        if (isClosingTag) {
+          indent = Math.max(indent - 1, 0);
+        }
+        out.push(new Array(indent + 1).join("  ") + line);
+        if (isOpeningTag && !isDeclarationOrComment) {
+          indent++;
+        }
+      }
+      return out.join("\n");
+    }
+
+    function validateXmlContent(content) {
+      var parser = new DOMParser();
+      var xmlDoc = parser.parseFromString(content, "application/xml");
+      var errNode = xmlDoc.getElementsByTagName("parsererror")[0];
+      if (!errNode) {
+        return { ok: true };
+      }
+      var rawMessage = ((errNode.textContent || "").replace(/\s+/g, " ")).trim();
+      var line = 0;
+      var column = 0;
+      var m = rawMessage.match(/line\s+(\d+).*column\s+(\d+)/i) ||
+              rawMessage.match(/Line Number\s+(\d+),\s*Column\s+(\d+)/i);
+      var index = -1;
+      var preview = "";
+      if (m) {
+        line = parseInt(m[1], 10);
+        column = parseInt(m[2], 10);
+        index = indexFromLineColumn(content, line, column);
+        preview = buildJsonErrorPreview(content, index);
+      }
+      var msg = line > 0
+        ? "XML 格式错误，第 " + line + " 行第 " + column + " 列附近有问题。"
+        : "XML 格式错误，请检查标签闭合与属性写法。";
+      if (rawMessage) {
+        msg += " 原始错误：" + rawMessage;
+      }
+      return {
+        ok: false,
+        message: msg,
+        index: index,
+        preview: preview
+      };
+    }
+
+    function renderResult(text, keywordRaw, searchWord, resetSearchToFirst) {
+      resultView.classList.remove("fold-mode");
+      var keywords = parseKeywords(keywordRaw);
+      var normalizedSearchWord = (searchWord || "").trim();
+      var rendered = buildHighlightedHtml(text, keywords, normalizedSearchWord, resetSearchToFirst);
+
+      resultView.innerHTML = rendered.html;
+      searchMatches = rendered.searchMatches;
+      activeSearchIndex = rendered.activeSearchIndex;
+      lastSearchWord = normalizedSearchWord;
+      updateSearchMeta();
+      scrollToActiveMatch();
+    }
+
+    function renderOutput(resetSearchToFirst) {
+      if (currentViewMode === "fold") {
+        renderFoldedResult();
+        return;
+      }
+      var queryRaw = searchInput.value;
+      renderResult(lastFormattedText, queryRaw, getPrimaryQueryWord(queryRaw), resetSearchToFirst);
+    }
+
+    function toggleFoldView() {
+      if (currentViewMode === "text") {
+        if (!structuredData || !structuredData.value) {
+          setStatus("请先格式化 JSON 或 XML 后再使用折叠视图。", true);
+          return;
+        }
+        currentViewMode = "fold";
+        foldBtn.textContent = "文本视图";
+        renderFoldedResult();
+        return;
+      }
+      currentViewMode = "text";
+      foldBtn.textContent = "折叠视图";
+      renderOutput(true);
+    }
+
+    function renderFoldedResult() {
+      if (!structuredData || !structuredData.value) {
+        setStatus("当前内容不支持折叠视图。", true);
+        currentViewMode = "text";
+        foldBtn.textContent = "折叠视图";
+        renderOutput(true);
+        return;
+      }
+      resultView.classList.add("fold-mode");
+      resultView.innerHTML = "";
+      searchMatches = [];
+      activeSearchIndex = -1;
+      lastSearchWord = "";
+
+      var tree = document.createElement("div");
+      tree.className = "fold-tree";
+      if (structuredData.type === "json") {
+        tree.appendChild(buildJsonTreeNode(structuredData.value, "root", 0));
+      } else if (structuredData.type === "xml") {
+        var rootEl = structuredData.value && structuredData.value.documentElement;
+        if (rootEl) {
+          tree.appendChild(buildXmlTreeNode(rootEl, 0));
+        } else {
+          tree.textContent = "XML 根节点为空。";
+        }
+      } else {
+        tree.textContent = "当前类型暂不支持折叠。";
+      }
+      resultView.appendChild(tree);
+      searchMeta.textContent = "折叠视图：点击节点左侧箭头可展开/收起。";
+    }
+
+    function buildJsonTreeNode(value, label, depth) {
+      var isArray = Array.isArray(value);
+      var isObject = value && typeof value === "object" && !isArray;
+      if (!isArray && !isObject) {
+        var primitive = document.createElement("div");
+        primitive.className = "fold-line";
+        primitive.innerHTML = '<span class="fold-key">' + escapeHtml(label) + '</span>: <span class="fold-value">' + escapeHtml(formatJsonPrimitive(value)) + "</span>";
+        return primitive;
+      }
+
+      var details = document.createElement("details");
+      if (depth <= 1) {
+        details.open = true;
+      }
+      var summary = document.createElement("summary");
+      var count = isArray ? value.length : Object.keys(value).length;
+      summary.textContent = label + (isArray ? " [Array(" + count + ")]" : " {Object(" + count + ")}");
+      details.appendChild(summary);
+
+      if (isArray) {
+        for (var i = 0; i < value.length; i++) {
+          details.appendChild(buildJsonTreeNode(value[i], "[" + i + "]", depth + 1));
+        }
+      } else {
+        var keys = Object.keys(value);
+        for (var k = 0; k < keys.length; k++) {
+          var key = keys[k];
+          details.appendChild(buildJsonTreeNode(value[key], key, depth + 1));
+        }
+      }
+      return details;
+    }
+
+    function formatJsonPrimitive(value) {
+      if (typeof value === "string") {
+        return '"' + value + '"';
+      }
+      return String(value);
+    }
+
+    function buildXmlTreeNode(element, depth) {
+      var details = document.createElement("details");
+      if (depth <= 1) {
+        details.open = true;
+      }
+      var summary = document.createElement("summary");
+      summary.textContent = "<" + element.nodeName + buildXmlAttrText(element) + ">";
+      details.appendChild(summary);
+
+      var hasChild = false;
+      for (var i = 0; i < element.childNodes.length; i++) {
+        var child = element.childNodes[i];
+        if (child.nodeType === 1) {
+          hasChild = true;
+          details.appendChild(buildXmlTreeNode(child, depth + 1));
+        } else if (child.nodeType === 3) {
+          var txt = (child.nodeValue || "").trim();
+          if (txt) {
+            hasChild = true;
+            var line = document.createElement("div");
+            line.className = "fold-line";
+            line.innerHTML = '<span class="fold-value">' + escapeHtml(txt) + "</span>";
+            details.appendChild(line);
+          }
+        }
+      }
+
+      if (!hasChild) {
+        var emptyLine = document.createElement("div");
+        emptyLine.className = "fold-line";
+        emptyLine.innerHTML = '<span class="fold-value">(empty)</span>';
+        details.appendChild(emptyLine);
+      }
+      return details;
+    }
+
+    function buildXmlAttrText(element) {
+      if (!element.attributes || element.attributes.length === 0) {
+        return "";
+      }
+      var attrs = [];
+      for (var i = 0; i < element.attributes.length; i++) {
+        var attr = element.attributes[i];
+        attrs.push(attr.name + '="' + attr.value + '"');
+      }
+      return " " + attrs.join(" ");
+    }
+
+    function parseKeywords(raw) {
+      if (!raw) {
+        return [];
+      }
+      var parts = raw.split(/[\s,，]+/);
+      var seen = {};
+      var keywords = [];
+      for (var i = 0; i < parts.length; i++) {
+        var p = parts[i].trim();
+        if (p && !seen[p]) {
+          seen[p] = true;
+          keywords.push(p);
+        }
+      }
+      return keywords;
+    }
+
+    function getPrimaryQueryWord(raw) {
+      var keywords = parseKeywords(raw || "");
+      return keywords.length ? keywords[0] : "";
+    }
+
+    function buildHighlightedHtml(text, keywords, searchWord, resetSearchToFirst) {
+      var len = text.length;
+      if (len === 0) {
+        return { html: "", searchMatches: [], activeSearchIndex: -1 };
+      }
+
+      var styleMap = new Array(len);
+      for (var i = 0; i < len; i++) {
+        styleMap[i] = 0;
+      }
+
+      for (var k = 0; k < keywords.length; k++) {
+        applyStyle(text, keywords[k], styleMap, 1);
+      }
+
+      var ranges = collectRanges(text, searchWord);
+      var nextIndex = activeSearchIndex;
+      if (!searchWord || ranges.length === 0) {
+        nextIndex = -1;
+      } else if (resetSearchToFirst || nextIndex < 0 || nextIndex >= ranges.length) {
+        nextIndex = 0;
+      }
+
+      for (var r = 0; r < ranges.length; r++) {
+        var style = r === nextIndex ? 3 : 2;
+        for (var p = ranges[r].start; p < ranges[r].end; p++) {
+          styleMap[p] = style;
+        }
+      }
+
+      var html = "";
+      var start = 0;
+      var current = styleMap[0];
+      for (var c = 1; c <= len; c++) {
+        var now = c < len ? styleMap[c] : -1;
+        if (now !== current) {
+          html += wrapSegment(text.slice(start, c), current);
+          start = c;
+          current = now;
+        }
+      }
+
+      return { html: html, searchMatches: ranges, activeSearchIndex: nextIndex };
+    }
+
+    function applyStyle(text, term, styleMap, styleCode) {
+      var ranges = collectRanges(text, term);
+      for (var i = 0; i < ranges.length; i++) {
+        for (var p = ranges[i].start; p < ranges[i].end; p++) {
+          if (styleMap[p] < styleCode) {
+            styleMap[p] = styleCode;
+          }
+        }
+      }
+    }
+
+    function collectRanges(text, term) {
+      if (!term) {
+        return [];
+      }
+      var re = new RegExp(escapeRegExp(term), "gi");
+      var m;
+      var list = [];
+      while ((m = re.exec(text)) !== null) {
+        var s = m.index;
+        list.push({ start: s, end: s + m[0].length });
+        if (m[0].length === 0) {
+          re.lastIndex++;
+        }
+      }
+      return list;
+    }
+
+    function wrapSegment(segment, style) {
+      if (!segment) {
+        return "";
+      }
+      var escaped = escapeHtml(segment);
+      if (style === 1) {
+        return '<span class="keyword-highlight">' + escaped + "</span>";
+      }
+      if (style === 2) {
+        return '<span class="search-highlight">' + escaped + "</span>";
+      }
+      if (style === 3) {
+        return '<span class="search-highlight-active">' + escaped + "</span>";
+      }
+      return escaped;
+    }
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function escapeRegExp(str) {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+
+    function locateFirst() {
+      if (!lastFormattedText) {
+        setStatus("请先执行格式化。", true);
+        return;
+      }
+      if (currentViewMode === "fold") {
+        setStatus("折叠视图下请先切回文本视图再搜索定位。", true);
+        return;
+      }
+      var queryRaw = searchInput.value || "";
+      var word = getPrimaryQueryWord(queryRaw);
+      if (!word) {
+        setStatus("请输入高亮/定位关键词。", true);
+        return;
+      }
+      clearStatus();
+      renderResult(lastFormattedText, queryRaw, word, true);
+      if (searchMatches.length === 0) {
+        setStatus("未找到匹配项。", true);
+      }
+    }
+
+    function locateStep(step) {
+      if (!lastFormattedText) {
+        setStatus("请先执行格式化。", true);
+        return;
+      }
+      if (currentViewMode === "fold") {
+        setStatus("折叠视图下请先切回文本视图再搜索定位。", true);
+        return;
+      }
+      var queryRaw = searchInput.value || "";
+      var word = getPrimaryQueryWord(queryRaw);
+      if (!word) {
+        setStatus("请输入高亮/定位关键词。", true);
+        return;
+      }
+
+      if (word !== lastSearchWord) {
+        renderResult(lastFormattedText, queryRaw, word, true);
+        if (searchMatches.length === 0) {
+          setStatus("未找到匹配项。", true);
+          return;
+        }
+        if (step < 0) {
+          activeSearchIndex = searchMatches.length - 1;
+          renderResult(lastFormattedText, queryRaw, word, false);
+        }
+        clearStatus();
+        return;
+      }
+
+      if (searchMatches.length === 0) {
+        renderResult(lastFormattedText, queryRaw, word, true);
+        if (searchMatches.length === 0) {
+          setStatus("未找到匹配项。", true);
+          return;
+        }
+      }
+
+      activeSearchIndex = (activeSearchIndex + step + searchMatches.length) % searchMatches.length;
+      renderResult(lastFormattedText, queryRaw, word, false);
+      clearStatus();
+    }
+
+    function scrollToActiveMatch() {
+      if (activeSearchIndex < 0) {
+        return;
+      }
+      var node = resultView.querySelector(".search-highlight-active");
+      if (node && typeof node.scrollIntoView === "function") {
+        node.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+
+    function setStatus(message, isError) {
+      status.textContent = message;
+      status.className = "status-banner " + (isError ? "error" : "ok");
+    }
+
+    function clearStatus() {
+      status.textContent = "";
+      status.className = "status-banner";
+      sourceText.style.borderColor = "";
+    }
+
+    function updateSearchMeta() {
+      var raw = searchInput.value || "";
+      var word = getPrimaryQueryWord(raw);
+      if (!word) {
+        searchMeta.textContent = "快捷键：Ctrl/Cmd+Enter、F3、Shift+F3";
+        return;
+      }
+      if (searchMatches.length === 0) {
+        searchMeta.textContent = "匹配：0（定位词：" + word + "）";
+        return;
+      }
+      searchMeta.textContent = "匹配：" + (activeSearchIndex + 1) + " / " + searchMatches.length + "（定位词：" + word + "）";
+    }
+
+    function initVisitCount() {
+      if (!visitStat) {
+        return;
+      }
+      var count = 1;
+      try {
+        var saved = parseInt(window.localStorage.getItem(visitStorageKey) || "0", 10);
+        count = isNaN(saved) ? 1 : saved + 1;
+        window.localStorage.setItem(visitStorageKey, String(count));
+      } catch (e) {
+        count = 1;
+      }
+      visitStat.textContent = "访问次数：" + count + "（本设备）";
+    }
+
+    function initLayoutMode() {
+      var saved = "";
+      try {
+        saved = window.localStorage.getItem(layoutStorageKey) || "";
+      } catch (e) {
+        saved = "";
+      }
+      var mode = saved === "horizontal" ? "horizontal" : "vertical";
+      layoutMode.value = mode;
+      applyLayout(mode);
+    }
+
+    function applyLayout(mode) {
+      var finalMode = mode === "horizontal" ? "horizontal" : "vertical";
+      layoutContainer.classList.remove("layout-horizontal");
+      layoutContainer.classList.remove("layout-vertical");
+      layoutContainer.classList.add("layout-" + finalMode);
+      try {
+        window.localStorage.setItem(layoutStorageKey, finalMode);
+      } catch (e) {}
+    }
+
+    function initThemeMode() {
+      var saved = "";
+      try {
+        saved = window.localStorage.getItem(themeStorageKey) || "";
+      } catch (e) {
+        saved = "";
+      }
+      var mode = saved === "dark" ? "dark" : "light";
+      themeMode.value = mode;
+      applyTheme(mode);
+    }
+
+    function applyTheme(mode) {
+      var finalMode = mode === "dark" ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", finalMode);
+      try {
+        window.localStorage.setItem(themeStorageKey, finalMode);
+      } catch (e) {}
+    }
+
+    function copyText(text) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () {
+          setStatus("复制成功。", false);
+        }).catch(function () {
+          fallbackCopyText(text);
+        });
+        return;
+      }
+      fallbackCopyText(text);
+    }
+
+    function fallbackCopyText(text) {
+      var input = document.createElement("textarea");
+      input.value = text;
+      document.body.appendChild(input);
+      input.select();
+      var ok = document.execCommand("copy");
+      document.body.removeChild(input);
+      if (ok) {
+        setStatus("复制成功。", false);
+      } else {
+        setStatus("复制失败，请手动复制。", true);
+      }
+    }
+
+    function initButtonRipples() {
+      var buttons = document.querySelectorAll(".btn-ripple");
+      Array.prototype.forEach.call(buttons, function (button) {
+        button.addEventListener("click", function (event) {
+          var rect = button.getBoundingClientRect();
+          var x = event.clientX || event.clientX === 0 ? event.clientX - rect.left : rect.width / 2;
+          var y = event.clientY || event.clientY === 0 ? event.clientY - rect.top : rect.height / 2;
+          var size = Math.max(rect.width, rect.height) * 1.18;
+          var ripple = document.createElement("span");
+          ripple.className = "button-ripple";
+          ripple.style.width = size + "px";
+          ripple.style.height = size + "px";
+          ripple.style.left = x + "px";
+          ripple.style.top = y + "px";
+          button.appendChild(ripple);
+          ripple.addEventListener("animationend", function () {
+            ripple.remove();
+          });
+        });
+      });
+    }
+  })();
+</script>
+</body>
+</html>
