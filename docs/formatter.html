@@ -749,6 +749,21 @@
       box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
     }
 
+    .fold-search-highlight {
+      background: rgba(147, 197, 253, 0.28);
+      color: #e8f4ff;
+      border-radius: 3px;
+      padding: 0 1px;
+    }
+
+    .fold-search-highlight-active {
+      background: #fb923c;
+      color: #111827;
+      border-radius: 3px;
+      padding: 0 1px;
+      box-shadow: 0 0 0 1px rgba(17, 24, 39, 0.34);
+    }
+
     .result-box::-webkit-scrollbar {
       width: 10px;
       height: 10px;
@@ -1672,7 +1687,13 @@
         tree.textContent = "当前类型暂不支持折叠。";
       }
       resultView.appendChild(tree);
-      searchMeta.textContent = "折叠视图：点击节点左侧箭头可展开/收起。";
+      var queryRaw = searchInput.value || "";
+      var word = getPrimaryQueryWord(queryRaw);
+      if (word) {
+        applyFoldSearch(word, true);
+      } else {
+        searchMeta.textContent = "折叠视图：点击节点左侧箭头可展开/收起。";
+      }
     }
 
     function buildJsonTreeNode(value, label, depth) {
@@ -1893,14 +1914,17 @@
         setStatus("请先执行格式化。", true);
         return;
       }
-      if (currentViewMode === "fold") {
-        setStatus("折叠视图下请先切回文本视图再搜索定位。", true);
-        return;
-      }
       var queryRaw = searchInput.value || "";
       var word = getPrimaryQueryWord(queryRaw);
       if (!word) {
         setStatus("请输入高亮/定位关键词。", true);
+        return;
+      }
+      if (currentViewMode === "fold") {
+        clearStatus();
+        if (!applyFoldSearch(word, true)) {
+          setStatus("未找到匹配项。", true);
+        }
         return;
       }
       clearStatus();
@@ -1915,14 +1939,30 @@
         setStatus("请先执行格式化。", true);
         return;
       }
-      if (currentViewMode === "fold") {
-        setStatus("折叠视图下请先切回文本视图再搜索定位。", true);
-        return;
-      }
       var queryRaw = searchInput.value || "";
       var word = getPrimaryQueryWord(queryRaw);
       if (!word) {
         setStatus("请输入高亮/定位关键词。", true);
+        return;
+      }
+      if (currentViewMode === "fold") {
+        if (word !== lastSearchWord || searchMatches.length === 0) {
+          if (!applyFoldSearch(word, true)) {
+            setStatus("未找到匹配项。", true);
+            return;
+          }
+          if (step < 0) {
+            activeSearchIndex = searchMatches.length - 1;
+            activateFoldSearchMatch(activeSearchIndex);
+            updateSearchMeta();
+          }
+          clearStatus();
+          return;
+        }
+        activeSearchIndex = (activeSearchIndex + step + searchMatches.length) % searchMatches.length;
+        activateFoldSearchMatch(activeSearchIndex);
+        updateSearchMeta();
+        clearStatus();
         return;
       }
 
@@ -1960,6 +2000,123 @@
       var node = resultView.querySelector(".search-highlight-active");
       if (node && typeof node.scrollIntoView === "function") {
         node.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+
+    function applyFoldSearch(word, resetSearchToFirst) {
+      searchMatches = collectFoldSearchMatches(word);
+      lastSearchWord = word;
+      if (searchMatches.length === 0) {
+        activeSearchIndex = -1;
+        updateSearchMeta();
+        return false;
+      }
+      if (resetSearchToFirst || activeSearchIndex < 0 || activeSearchIndex >= searchMatches.length) {
+        activeSearchIndex = 0;
+      }
+      activateFoldSearchMatch(activeSearchIndex);
+      updateSearchMeta();
+      return true;
+    }
+
+    function clearFoldSearchMatches() {
+      var marks = resultView.querySelectorAll(".fold-search-highlight, .fold-search-highlight-active");
+      var parentList = [];
+      for (var i = 0; i < marks.length; i++) {
+        var mark = marks[i];
+        var parent = mark.parentNode;
+        if (!parent) {
+          continue;
+        }
+        parent.replaceChild(document.createTextNode(mark.textContent || ""), mark);
+        if (parentList.indexOf(parent) === -1) {
+          parentList.push(parent);
+        }
+      }
+      for (var j = 0; j < parentList.length; j++) {
+        if (typeof parentList[j].normalize === "function") {
+          parentList[j].normalize();
+        }
+      }
+    }
+
+    function collectFoldSearchMatches(word) {
+      clearFoldSearchMatches();
+      if (!word) {
+        return [];
+      }
+      var matcher = new RegExp(escapeRegExp(word), "gi");
+      var textFilter = window.NodeFilter ? window.NodeFilter.SHOW_TEXT : 4;
+      var targetNodes = resultView.querySelectorAll(".fold-tree summary, .fold-tree .fold-line");
+      var matches = [];
+      for (var i = 0; i < targetNodes.length; i++) {
+        var target = targetNodes[i];
+        var walker = document.createTreeWalker(target, textFilter, null);
+        var textNodes = [];
+        var currentNode;
+        while ((currentNode = walker.nextNode())) {
+          textNodes.push(currentNode);
+        }
+        for (var t = 0; t < textNodes.length; t++) {
+          var textNode = textNodes[t];
+          var text = textNode.nodeValue || "";
+          if (!text) {
+            continue;
+          }
+          matcher.lastIndex = 0;
+          var match;
+          var hasMatch = false;
+          var lastIndex = 0;
+          var fragment = document.createDocumentFragment();
+          while ((match = matcher.exec(text)) !== null) {
+            hasMatch = true;
+            if (match.index > lastIndex) {
+              fragment.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+            }
+            var span = document.createElement("span");
+            span.className = "fold-search-highlight";
+            span.textContent = match[0];
+            fragment.appendChild(span);
+            matches.push(span);
+            lastIndex = match.index + match[0].length;
+            if (match[0].length === 0) {
+              matcher.lastIndex++;
+            }
+          }
+          if (!hasMatch) {
+            continue;
+          }
+          if (lastIndex < text.length) {
+            fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
+          }
+          textNode.parentNode.replaceChild(fragment, textNode);
+        }
+      }
+      return matches;
+    }
+
+    function activateFoldSearchMatch(index) {
+      for (var i = 0; i < searchMatches.length; i++) {
+        searchMatches[i].className = "fold-search-highlight";
+      }
+      if (index < 0 || index >= searchMatches.length) {
+        return;
+      }
+      var target = searchMatches[index];
+      target.className = "fold-search-highlight-active";
+      expandFoldParents(target);
+      if (typeof target.scrollIntoView === "function") {
+        target.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+
+    function expandFoldParents(node) {
+      var parent = node.parentElement;
+      while (parent && parent !== resultView) {
+        if (parent.tagName && parent.tagName.toLowerCase() === "details") {
+          parent.open = true;
+        }
+        parent = parent.parentElement;
       }
     }
 
