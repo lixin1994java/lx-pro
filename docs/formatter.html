@@ -196,12 +196,47 @@
       margin: 0 0 16px;
     }
 
+    .title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+
     h1 {
       margin: 0;
       font-size: 28px;
       letter-spacing: -0.02em;
       font-weight: 700;
       text-shadow: 0 1px 0 rgba(255, 255, 255, 0.26);
+    }
+
+    .title-sub {
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.16px;
+      line-height: 1.45;
+      opacity: 0.88;
+    }
+
+    .title-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .title-badge {
+      border: 1px solid color-mix(in srgb, var(--primary) 26%, var(--surface-soft-border));
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.28px;
+      text-transform: uppercase;
+      color: var(--primary);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(236, 244, 255, 0.72));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 6px 16px rgba(0, 113, 227, 0.14);
     }
 
     .control-grid {
@@ -233,6 +268,17 @@
       flex-direction: column;
       gap: 6px;
       min-width: 0;
+      border: 1px solid color-mix(in srgb, var(--surface-soft-border-hover) 78%, transparent);
+      border-radius: 14px;
+      padding: 10px 12px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(247, 248, 252, 0.56));
+      transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease;
+    }
+
+    .control-item:hover {
+      border-color: var(--input-border-hover);
+      box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+      transform: translateY(-1px);
     }
 
     .control-item.select-item {
@@ -355,6 +401,13 @@
       border-radius: 16px;
       background: linear-gradient(160deg, var(--toolbar-pill-bg), rgba(255, 255, 255, 0.1));
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.36), 0 8px 20px rgba(15, 23, 42, 0.08);
+      transition: transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease;
+    }
+
+    .action-group:hover {
+      transform: translateY(-1px);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42), 0 12px 24px rgba(15, 23, 42, 0.12);
+      border-color: color-mix(in srgb, var(--primary) 20%, var(--toolbar-border));
     }
 
     .action-group::before {
@@ -406,7 +459,7 @@
     .layout-panel:hover {
       border-color: var(--surface-soft-border-hover);
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), var(--panel-shadow-hover);
-      transform: translateY(-3px);
+      transform: translateY(-2px);
     }
 
     .layout-panel::before {
@@ -580,6 +633,7 @@
       flex: 1;
       height: 100%;
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 12px 26px rgba(2, 6, 23, 0.22);
+      background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 24%);
     }
 
     .result-box:hover {
@@ -596,6 +650,18 @@
     [data-theme="dark"] .actions,
     [data-theme="dark"] .layout-panel {
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), var(--panel-shadow);
+    }
+
+    [data-theme="dark"] .control-item {
+      background: linear-gradient(180deg, rgba(58, 58, 60, 0.62), rgba(44, 44, 46, 0.5));
+      border-color: rgba(99, 99, 102, 0.62);
+    }
+
+    [data-theme="dark"] .title-badge {
+      background: linear-gradient(180deg, rgba(10, 132, 255, 0.26), rgba(10, 132, 255, 0.16));
+      border-color: rgba(10, 132, 255, 0.44);
+      color: #bfe0ff;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 8px 20px rgba(10, 132, 255, 0.2);
     }
 
     [data-theme="dark"] button {
@@ -734,6 +800,11 @@
         align-items: flex-start;
       }
 
+      .title-meta {
+        width: 100%;
+        justify-content: space-between;
+      }
+
       .actions {
         grid-template-columns: 1fr;
       }
@@ -757,8 +828,14 @@
 <body>
 <div class="container">
   <div class="title-row">
-    <h1>JSON / XML 格式化工具</h1>
-    <div id="visitStat" class="visit-stat">访问次数：--</div>
+    <div class="title-block">
+      <h1>JSON / XML 格式化工具</h1>
+      <div class="title-sub">Pro Studio · 格式化、校验、折叠与高亮定位一体化工作台</div>
+    </div>
+    <div class="title-meta">
+      <span class="title-badge">Premium UI</span>
+      <div id="visitStat" class="visit-stat">访问次数：--</div>
+    </div>
   </div>
 
   <div class="control-grid">

@@ -172,11 +172,47 @@
             margin-bottom: 18px;
         }
 
+        .title-block {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0;
+        }
+
         .tool-title {
             margin-bottom: 0;
-            font-size: 24px;
-            font-weight: 600;
+            font-size: 26px;
+            font-weight: 700;
             color: var(--title-color);
+            letter-spacing: -0.02em;
+        }
+
+        .title-sub {
+            color: var(--label-color);
+            font-size: 12px;
+            letter-spacing: 0.16px;
+            line-height: 1.45;
+            opacity: 0.88;
+        }
+
+        .title-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .title-badge {
+            border: 1px solid color-mix(in srgb, var(--primary) 28%, var(--panel-border));
+            border-radius: 999px;
+            padding: 6px 12px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.28px;
+            text-transform: uppercase;
+            color: var(--primary);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(236, 244, 255, 0.74));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72), 0 6px 16px rgba(30, 128, 255, 0.14);
         }
 
         .visit-stat {
@@ -187,6 +223,7 @@
             border-radius: 999px;
             background: var(--panel-bg);
             white-space: nowrap;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 8px 20px rgba(15, 23, 42, 0.1);
         }
 
         .tool-row {
@@ -259,6 +296,17 @@
             flex-direction: column;
             gap: 6px;
             min-width: 0;
+            border: 1px solid color-mix(in srgb, var(--panel-border) 82%, transparent);
+            border-radius: 14px;
+            padding: 10px 12px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(247, 248, 252, 0.56));
+            transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease;
+        }
+
+        .control-item:hover {
+            border-color: var(--panel-border-hover);
+            box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+            transform: translateY(-1px);
         }
 
         .control-item.select-item {
@@ -432,7 +480,7 @@
         .layui-input,
         .layui-textarea,
         .layui-form-select .layui-input {
-            background: var(--card);
+            background: var(--card-bg);
             color: var(--title-color);
             border-color: var(--border, #e5e7eb);
         }
@@ -470,7 +518,7 @@
         .result-box {
             margin-top: 0;
             border: 1px solid var(--result-border);
-            border-radius: 4px;
+            border-radius: 12px;
             background: var(--result-bg);
             color: var(--result-fg);
             min-height: 0;
@@ -484,11 +532,25 @@
             transition: border-color 180ms ease, box-shadow 180ms ease;
             flex: 1;
             height: 100%;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 12px 26px rgba(2, 6, 23, 0.22);
+            background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 24%);
         }
 
         .result-box:hover {
             border-color: var(--result-hover-border);
-            box-shadow: var(--result-hover-shadow);
+            box-shadow: var(--result-hover-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
+
+        [data-theme="dark"] .control-item {
+            background: linear-gradient(180deg, rgba(58, 58, 60, 0.62), rgba(44, 44, 46, 0.5));
+            border-color: rgba(99, 99, 102, 0.62);
+        }
+
+        [data-theme="dark"] .title-badge {
+            background: linear-gradient(180deg, rgba(94, 162, 255, 0.32), rgba(94, 162, 255, 0.18));
+            border-color: rgba(94, 162, 255, 0.44);
+            color: #d7e9ff;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 8px 20px rgba(94, 162, 255, 0.22);
         }
 
         .result-box.fold-mode {
@@ -647,6 +709,11 @@
                 align-items: flex-start;
             }
 
+            .title-meta {
+                width: 100%;
+                justify-content: space-between;
+            }
+
             .orb-fields {
                 grid-template-columns: 1fr;
             }
@@ -675,8 +742,14 @@
 <body>
 <div class="tool-card">
     <div class="title-row">
-        <h1 class="tool-title">JSON / XML 格式化工具</h1>
-        <div id="visitStat" class="visit-stat">访问次数：--</div>
+        <div class="title-block">
+            <h1 class="tool-title">JSON / XML 格式化工具</h1>
+            <div class="title-sub">Pro Studio · 格式化、校验、折叠与高亮定位一体化工作台</div>
+        </div>
+        <div class="title-meta">
+            <span class="title-badge">Premium UI</span>
+            <div id="visitStat" class="visit-stat">访问次数：--</div>
+        </div>
     </div>
     <div class="command-orbs">
         <section class="orb-panel orb-left">
